@@ -811,4 +811,10 @@
 </project>]]></echo>
         <antcall target="set-idea-to-java11"/>
     </target>
+
+    <target name="clean-idea-files"
+            description="Clean IDEA files">
+        <delete dir=".idea"/>
+        <delete file="${project.name}.iml"/>
+    </target>
 </project>
