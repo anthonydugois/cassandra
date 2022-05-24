@@ -52,12 +52,16 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
         long timeout = message.expiresAtNanos() - message.createdAtNanos();
         command.setMonitoringTime(message.createdAtNanos(), message.isCrossNode(), timeout, DatabaseDescriptor.getSlowQueryTimeout(NANOSECONDS));
 
+        Tracing.customTrace("Start remote read");
+
         ReadResponse response;
         try (ReadExecutionController controller = command.executionController(message.trackRepairedData());
              UnfilteredPartitionIterator iterator = command.executeLocally(controller))
         {
             response = command.createResponse(iterator, controller.getRepairedDataInfo());
         }
+
+        Tracing.customTrace("End remote read");
 
         if (!command.complete())
         {

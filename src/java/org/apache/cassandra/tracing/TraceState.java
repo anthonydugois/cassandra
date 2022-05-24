@@ -153,21 +153,48 @@ public abstract class TraceState implements ProgressEventNotifier
 
     public void trace(String format, Object arg)
     {
-        trace(MessageFormatter.format(format, arg).getMessage());
+        // trace(MessageFormatter.format(format, arg).getMessage());
     }
 
     public void trace(String format, Object arg1, Object arg2)
     {
-        trace(MessageFormatter.format(format, arg1, arg2).getMessage());
+        // trace(MessageFormatter.format(format, arg1, arg2).getMessage());
     }
 
     public void trace(String format, Object... args)
     {
-        trace(MessageFormatter.arrayFormat(format, args).getMessage());
+        // trace(MessageFormatter.arrayFormat(format, args).getMessage());
     }
 
     public void trace(String message)
     {
+        /*if (notify)
+            notifyActivity();
+
+        traceImpl(message);
+
+        for (ProgressListener listener : listeners)
+        {
+            listener.progress(tag, ProgressEvent.createNotification(message));
+        }*/
+    }
+
+    public void customTrace(String format, Object arg)
+    {
+        customTrace(MessageFormatter.format(format, arg).getMessage());
+    }
+
+    public void customTrace(String format, Object arg1, Object arg2)
+    {
+        customTrace(MessageFormatter.format(format, arg1, arg2).getMessage());
+    }
+
+    public void customTrace(String format, Object... args)
+    {
+        customTrace(MessageFormatter.arrayFormat(format, args).getMessage());
+    }
+
+    public void customTrace(String message) {
         if (notify)
             notifyActivity();
 

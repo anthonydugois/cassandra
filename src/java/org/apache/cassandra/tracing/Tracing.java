@@ -362,6 +362,24 @@ public abstract class Tracing implements ExecutorLocal<TraceState>
         state.trace(format, args);
     }
 
+    public static void customTrace(String message)
+    {
+        final TraceState state = instance.get();
+        if (state == null) // inline isTracing to avoid implicit two calls to state.get()
+            return;
+
+        state.customTrace(message);
+    }
+
+    public static void customTrace(String format, Object arg)
+    {
+        final TraceState state = instance.get();
+        if (state == null) // inline isTracing to avoid implicit two calls to state.get()
+            return;
+
+        state.customTrace(format, arg);
+    }
+
     /**
      * Called for non-local traces (traces that are not initiated by local node == coordinator).
      */

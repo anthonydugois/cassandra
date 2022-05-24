@@ -395,7 +395,10 @@ public class InboundMessageHandler extends AbstractMessageHandler
         Header header = task.header();
 
         TraceState state = Tracing.instance.initializeFromMessage(header);
-        if (state != null) state.trace("{} message received from {}", header.verb, header.from);
+        // if (state != null) state.trace("{} message received from {}", header.verb, header.from);
+        if (state != null) {
+            state.customTrace("Received {} message", header.verb);
+        }
 
         callbacks.onDispatched(task.size(), header);
         header.verb.stage.execute(task, ExecutorLocals.create(state));
