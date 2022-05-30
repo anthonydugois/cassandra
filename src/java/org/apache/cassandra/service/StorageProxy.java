@@ -1907,7 +1907,7 @@ public class StorageProxy implements StorageProxyMBean
             reads[i] = AbstractReadExecutor.getReadExecutor(commands.get(i), consistencyLevel, queryStartNanoTime);
         }
 
-        Tracing.customTrace("Start fetching rows");
+        Tracing.customTrace("START");
 
         // sends a data request to the closest replica, and a digest request to the others. If we have a speculating
         // read executoe, we'll only send read requests to enough replicas to satisfy the consistency level
@@ -1943,7 +1943,7 @@ public class StorageProxy implements StorageProxyMBean
             reads[i].awaitReadRepair();
         }
 
-        Tracing.customTrace("End fetching rows");
+        Tracing.customTrace("END");
 
         // if we didn't do a read repair, return the contents of the data response, if we did do a read
         // repair, merge the full data reads
@@ -1984,7 +1984,7 @@ public class StorageProxy implements StorageProxyMBean
             {
                 command.setMonitoringTime(approxCreationTimeNanos, false, verb.expiresAfterNanos(), DatabaseDescriptor.getSlowQueryTimeout(NANOSECONDS));
 
-                Tracing.customTrace("Start local read");
+                Tracing.customTrace("START LOCAL READ");
 
                 ReadResponse response;
                 try (ReadExecutionController controller = command.executionController(trackRepairedStatus);
@@ -1993,7 +1993,7 @@ public class StorageProxy implements StorageProxyMBean
                     response = command.createResponse(iterator, controller.getRepairedDataInfo());
                 }
 
-                Tracing.customTrace("End local read");
+                Tracing.customTrace("END LOCAL READ");
 
                 if (command.complete())
                 {

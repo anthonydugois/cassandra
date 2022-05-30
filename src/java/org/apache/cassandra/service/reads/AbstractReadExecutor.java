@@ -148,7 +148,7 @@ public abstract class AbstractReadExecutor
             if (null == message)
                 message = readCommand.createMessage(false);
 
-            Tracing.customTrace("Send remote read request");
+            Tracing.customTrace("SEND REMOTE");
 
             MessagingService.instance().sendWithCallback(message, endpoint, handler);
         }
@@ -158,7 +158,7 @@ public abstract class AbstractReadExecutor
         {
             logger.trace("reading {} locally", readCommand.isDigestQuery() ? "digest" : "data");
 
-            Tracing.customTrace("Push local read");
+            Tracing.customTrace("SEND LOCAL");
 
             Stage.READ.maybeExecuteImmediately(new LocalReadRunnable(readCommand, handler));
         }

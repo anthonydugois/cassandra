@@ -47,8 +47,6 @@ class ResponseVerbHandler implements IVerbHandler
         long latencyNanos = approxTime.now() - callbackInfo.createdAtNanos;
         Tracing.trace("Processing response from {}", message.from());
 
-        Tracing.customTrace("Received response");
-
         RequestCallback cb = callbackInfo.callback;
         if (message.isFailureResponse())
         {
