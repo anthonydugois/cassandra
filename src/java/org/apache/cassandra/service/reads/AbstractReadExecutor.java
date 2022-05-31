@@ -148,7 +148,7 @@ public abstract class AbstractReadExecutor
             if (null == message)
                 message = readCommand.createMessage(false);
 
-            Tracing.customTrace("SEND REMOTE");
+            Tracing.customTrace("SEND_REMOTE_REQUEST");
 
             MessagingService.instance().sendWithCallback(message, endpoint, handler);
         }
@@ -158,7 +158,7 @@ public abstract class AbstractReadExecutor
         {
             logger.trace("reading {} locally", readCommand.isDigestQuery() ? "digest" : "data");
 
-            Tracing.customTrace("SEND LOCAL");
+            Tracing.customTrace("SEND_LOCAL_REQUEST");
 
             Stage.READ.maybeExecuteImmediately(new LocalReadRunnable(readCommand, handler));
         }
@@ -388,6 +388,8 @@ public abstract class AbstractReadExecutor
                 throw e;
             }
         }
+
+        Tracing.customTrace("RECV_RESPONSE");
 
         // return immediately, or begin a read repair
         if (digestResolver.responsesMatch())

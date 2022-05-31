@@ -103,7 +103,7 @@ class TracingImpl extends Tracing
      */
     public void trace(final ByteBuffer sessionId, final String message, final int ttl)
     {
-        final String threadName = Thread.currentThread().getName();
+        /* final String threadName = Thread.currentThread().getName();
 
         Stage.TRACING.execute(new WrappedRunnable()
         {
@@ -111,6 +111,6 @@ class TracingImpl extends Tracing
             {
                 TraceStateImpl.mutateWithCatch(TraceKeyspace.makeEventMutation(sessionId, message, -1, threadName, ttl));
             }
-        });
+        }); */
     }
 }

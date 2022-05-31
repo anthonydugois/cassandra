@@ -52,7 +52,7 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
         long timeout = message.expiresAtNanos() - message.createdAtNanos();
         command.setMonitoringTime(message.createdAtNanos(), message.isCrossNode(), timeout, DatabaseDescriptor.getSlowQueryTimeout(NANOSECONDS));
 
-        Tracing.customTrace("START REMOTE READ");
+        Tracing.customTrace("START_REMOTE_READ");
 
         ReadResponse response;
         try (ReadExecutionController controller = command.executionController(message.trackRepairedData());
@@ -61,7 +61,7 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
             response = command.createResponse(iterator, controller.getRepairedDataInfo());
         }
 
-        Tracing.customTrace("END REMOTE READ");
+        Tracing.customTrace("END_REMOTE_READ");
 
         if (!command.complete())
         {
@@ -72,7 +72,7 @@ public class ReadCommandVerbHandler implements IVerbHandler<ReadCommand>
 
         Tracing.trace("Enqueuing response to {}", message.from());
         Message<ReadResponse> reply = message.responseWith(response);
-        Tracing.customTrace("SEND RESPONSE");
+        Tracing.customTrace("SEND_RESPONSE");
         MessagingService.instance().send(reply, message.from());
     }
 
