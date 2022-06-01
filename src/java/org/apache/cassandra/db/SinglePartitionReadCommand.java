@@ -439,7 +439,8 @@ public class SinglePartitionReadCommand extends ReadCommand implements SinglePar
             if (cfs.isFilterFullyCoveredBy(clusteringIndexFilter(), limits(), cachedPartition, nowInSec(), metadata().enforceStrictLiveness()))
             {
                 cfs.metric.rowCacheHit.inc();
-                Tracing.trace("Row cache hit");
+                // Tracing.trace("Row cache hit");
+                Tracing.customTrace("READ_CACHE");
                 UnfilteredRowIterator unfilteredRowIterator = clusteringIndexFilter().getUnfilteredRowIterator(columnFilter(), cachedPartition);
                 cfs.metric.updateSSTableIterated(0);
                 return unfilteredRowIterator;
