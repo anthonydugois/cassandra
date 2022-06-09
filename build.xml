@@ -663,6 +663,13 @@
         <mkdir dir="${dir.lib}/sigar-bin"/>
 
         <!-- apache/cassandra/lib -->
+        <get dest="${dir.lib}/"
+             quiet="true"
+             usetimestamp="true"
+             skipexisting="true">
+            <url url="https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.17.0/jmx_prometheus_javaagent-0.17.0.jar"/>
+        </get>
+
         <get dest="${local.repository}/org/apache/cassandra/deps/sigar-bin/"
              quiet="true"
              usetimestamp="true"
