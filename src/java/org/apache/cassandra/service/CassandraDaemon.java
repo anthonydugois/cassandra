@@ -73,6 +73,7 @@ import org.apache.cassandra.io.sstable.CorruptSSTableException;
 import org.apache.cassandra.io.sstable.SSTableHeaderFix;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.locator.InetAddressAndPort;
+import org.apache.cassandra.locator.eft.KeyMap;
 import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.metrics.DefaultNameFactory;
 import org.apache.cassandra.metrics.StorageMetrics;
@@ -117,7 +118,8 @@ public class CassandraDaemon
         return instance;
     }
 
-    static {
+    static
+    {
         // Need to register metrics before instrumented appender is created(first access to LoggerFactory).
         SharedMetricRegistries.getOrCreate("logback-metrics").addListener(new MetricRegistryListener.Base()
         {
@@ -186,20 +188,20 @@ public class CassandraDaemon
     }
 
     @VisibleForTesting
-    public static Runnable SPECULATION_THRESHOLD_UPDATER = 
-        () -> 
+    public static Runnable SPECULATION_THRESHOLD_UPDATER =
+    () ->
+    {
+        try
         {
-            try
-            {
-                Keyspace.allExisting().forEach(k -> k.getColumnFamilyStores().forEach(ColumnFamilyStore::updateSpeculationThreshold));
-            }
-            catch (Throwable t)
-            {
-                logger.warn("Failed to update speculative retry thresholds.", t);
-                JVMStabilityInspector.inspectThrowable(t);
-            }
-        };
-    
+            Keyspace.allExisting().forEach(k -> k.getColumnFamilyStores().forEach(ColumnFamilyStore::updateSpeculationThreshold));
+        }
+        catch (Throwable t)
+        {
+            logger.warn("Failed to update speculative retry thresholds.", t);
+            JVMStabilityInspector.inspectThrowable(t);
+        }
+    };
+
     static final CassandraDaemon instance = new CassandraDaemon();
 
     private volatile NativeTransportService nativeTransportService;
@@ -223,7 +225,7 @@ public class CassandraDaemon
 
     /**
      * This is a hook for concrete daemons to initialize themselves suitably.
-     *
+     * <p>
      * Subclasses should override this to finish the job (listening on ports, etc.)
      */
     protected void setup()
@@ -472,7 +474,7 @@ public class CassandraDaemon
         ScheduledExecutors.optionalTasks.scheduleWithFixedDelay(ColumnFamilyStore.getBackgroundCompactionTaskSubmitter(), 5, 1, TimeUnit.MINUTES);
 
         // schedule periodic recomputation of speculative retry thresholds
-        ScheduledExecutors.optionalTasks.scheduleWithFixedDelay(SPECULATION_THRESHOLD_UPDATER, 
+        ScheduledExecutors.optionalTasks.scheduleWithFixedDelay(SPECULATION_THRESHOLD_UPDATER,
                                                                 DatabaseDescriptor.getReadRpcTimeout(NANOSECONDS),
                                                                 DatabaseDescriptor.getReadRpcTimeout(NANOSECONDS),
                                                                 NANOSECONDS);
@@ -492,7 +494,6 @@ public class CassandraDaemon
         {
             exitOrFail(e.returnCode, e.getMessage(), e.getCause());
         }
-
     }
 
     /**
@@ -505,7 +506,7 @@ public class CassandraDaemon
         // If there is only one directory and no system keyspace directory has been specified we do not need to do
         // anything. If it is not the case we want to try to migrate the data.
         if (!DatabaseDescriptor.useSpecificLocationForLocalSystemData()
-                && DatabaseDescriptor.getNonLocalSystemKeyspacesDataFileLocations().length <= 1)
+            && DatabaseDescriptor.getNonLocalSystemKeyspacesDataFileLocations().length <= 1)
             return;
 
         // We can face several cases:
@@ -541,8 +542,8 @@ public class CassandraDaemon
                     {
                         Path[] tableDirectories = keyspaceChildren.filter(Files::isDirectory)
                                                                   .filter(p -> !SystemKeyspace.TABLES_SPLIT_ACROSS_MULTIPLE_DISKS
-                                                                                              .contains(p.getFileName()
-                                                                                                         .toString()))
+                                                                                .contains(p.getFileName()
+                                                                                           .toString()))
                                                                   .toArray(Path[]::new);
 
                         for (Path tableDirectory : tableDirectories)
@@ -618,29 +619,29 @@ public class CassandraDaemon
 
     private void logSystemInfo()
     {
-    	if (logger.isInfoEnabled())
-    	{
-	        try
-	        {
-	            logger.info("Hostname: {}", InetAddress.getLocalHost().getHostName() + ":" + DatabaseDescriptor.getStoragePort() + ":" + DatabaseDescriptor.getSSLStoragePort());
-	        }
-	        catch (UnknownHostException e1)
-	        {
-	            logger.info("Could not resolve local host");
-	        }
+        if (logger.isInfoEnabled())
+        {
+            try
+            {
+                logger.info("Hostname: {}", InetAddress.getLocalHost().getHostName() + ":" + DatabaseDescriptor.getStoragePort() + ":" + DatabaseDescriptor.getSSLStoragePort());
+            }
+            catch (UnknownHostException e1)
+            {
+                logger.info("Could not resolve local host");
+            }
 
-	        logger.info("JVM vendor/version: {}/{}", JAVA_VM_NAME.getString(), JAVA_VERSION.getString());
-	        logger.info("Heap size: {}/{}",
+            logger.info("JVM vendor/version: {}/{}", JAVA_VM_NAME.getString(), JAVA_VERSION.getString());
+            logger.info("Heap size: {}/{}",
                         FBUtilities.prettyPrintMemory(Runtime.getRuntime().totalMemory()),
                         FBUtilities.prettyPrintMemory(Runtime.getRuntime().maxMemory()));
 
-	        for(MemoryPoolMXBean pool: ManagementFactory.getMemoryPoolMXBeans())
-	            logger.info("{} {}: {}", pool.getName(), pool.getType(), pool.getPeakUsage());
+            for (MemoryPoolMXBean pool : ManagementFactory.getMemoryPoolMXBeans())
+                logger.info("{} {}: {}", pool.getName(), pool.getType(), pool.getPeakUsage());
 
-	        logger.info("Classpath: {}", JAVA_CLASS_PATH.getString());
+            logger.info("Classpath: {}", JAVA_CLASS_PATH.getString());
 
             logger.info("JVM Arguments: {}", ManagementFactory.getRuntimeMXBean().getInputArguments());
-    	}
+        }
     }
 
     /**
@@ -648,8 +649,7 @@ public class CassandraDaemon
      * href="http://commons.apache.org/daemon/jsvc.html">Commons
      * Daemon</a>-specific arguments. To clarify, this is a hook for JSVC.
      *
-     * @param arguments
-     *            the arguments passed in from JSVC
+     * @param arguments the arguments passed in from JSVC
      * @throws IOException
      */
     public void init(String[] arguments) throws IOException
@@ -660,7 +660,7 @@ public class CassandraDaemon
     /**
      * Start the Cassandra Daemon, assuming that it has already been
      * initialized via {@link #init(String[])}
-     *
+     * <p>
      * Hook for JSVC
      */
     public void start()
@@ -683,6 +683,15 @@ public class CassandraDaemon
         }
 
         startClientTransports();
+
+        try
+        {
+            KeyMap.instance.putInMemory(new File("/home/adugois/Projects/cassandra/dist/data.csv"));
+        }
+        catch (Exception exception)
+        {
+            exception.printStackTrace();
+        }
     }
 
     private void startClientTransports()
@@ -699,7 +708,7 @@ public class CassandraDaemon
 
     /**
      * Stop the daemon, ideally in an idempotent manner.
-     *
+     * <p>
      * Hook for JSVC / Procrun
      */
     public void stop()
@@ -741,7 +750,8 @@ public class CassandraDaemon
      * is a hook for JSVC.
      */
     public void destroy()
-    {}
+    {
+    }
 
     /**
      * A convenience method to initialize and start the daemon in one shot.
@@ -784,7 +794,7 @@ public class CassandraDaemon
         catch (Throwable e)
         {
             boolean logStackTrace =
-                    e instanceof ConfigurationException ? ((ConfigurationException)e).logStackTrace : true;
+            e instanceof ConfigurationException ? ((ConfigurationException) e).logStackTrace : true;
 
             System.out.println("Exception (" + e.getClass().getName() + ") encountered during startup: " + e.getMessage());
 
@@ -873,7 +883,7 @@ public class CassandraDaemon
         stop();
         destroy();
         // completely shut down cassandra
-        if(!runManaged)
+        if (!runManaged)
         {
             System.exit(0);
         }
@@ -903,7 +913,7 @@ public class CassandraDaemon
     {
         if (runManaged)
         {
-            RuntimeException t = cause!=null ? new RuntimeException(message, cause) : new RuntimeException(message);
+            RuntimeException t = cause != null ? new RuntimeException(message, cause) : new RuntimeException(message);
             throw t;
         }
         else
