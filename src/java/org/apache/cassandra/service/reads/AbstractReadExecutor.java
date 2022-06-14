@@ -17,6 +17,8 @@
  */
 package org.apache.cassandra.service.reads;
 
+import java.nio.charset.StandardCharsets;
+
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,8 @@ import org.apache.cassandra.locator.Replica;
 import org.apache.cassandra.locator.ReplicaCollection;
 import org.apache.cassandra.locator.ReplicaPlan;
 import org.apache.cassandra.locator.ReplicaPlans;
+import org.apache.cassandra.locator.eft.KeyMap;
+import org.apache.cassandra.locator.eft.PendingStates;
 import org.apache.cassandra.net.Message;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.StorageProxy.LocalReadRunnable;
@@ -177,6 +181,18 @@ public abstract class AbstractReadExecutor
     {
         EndpointsForToken selected = replicaPlan().contacts();
         EndpointsForToken fullDataRequests = selected.filter(Replica::isFull, initialDataRequestCount);
+
+        if (command instanceof SinglePartitionReadCommand)
+        {
+            SinglePartitionReadCommand readCommand = (SinglePartitionReadCommand) command;
+            String key = new String(readCommand.partitionKey().getKey().array(), StandardCharsets.UTF_8);
+
+            if (KeyMap.instance.containsKey(key))
+            {
+                PendingStates.instance.addPendingKey(fullDataRequests.endpoints(), key);
+            }
+        }
+
         makeFullDataRequests(fullDataRequests);
         makeTransientDataRequests(selected.filterLazily(Replica::isTransient));
         makeDigestRequests(selected.filterLazily(r -> r.isFull() && !fullDataRequests.contains(r)));

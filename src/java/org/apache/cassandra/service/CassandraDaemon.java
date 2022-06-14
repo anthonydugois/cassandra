@@ -665,6 +665,15 @@ public class CassandraDaemon
      */
     public void start()
     {
+        try
+        {
+            KeyMap.instance.putInMemory(new File("/home/adugois/Projects/cassandra/data.csv"));
+        }
+        catch (Exception exception)
+        {
+            exception.printStackTrace();
+        }
+
         StartupClusterConnectivityChecker connectivityChecker = StartupClusterConnectivityChecker.create(DatabaseDescriptor.getBlockForPeersTimeoutInSeconds(),
                                                                                                          DatabaseDescriptor.getBlockForPeersInRemoteDatacenters());
         connectivityChecker.execute(Gossiper.instance.getEndpoints(), DatabaseDescriptor.getEndpointSnitch()::getDatacenter);
@@ -683,15 +692,6 @@ public class CassandraDaemon
         }
 
         startClientTransports();
-
-        try
-        {
-            KeyMap.instance.putInMemory(new File("/home/adugois/Projects/cassandra/dist/data.csv"));
-        }
-        catch (Exception exception)
-        {
-            exception.printStackTrace();
-        }
     }
 
     private void startClientTransports()

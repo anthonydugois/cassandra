@@ -154,8 +154,8 @@ public class DatabaseDescriptor
     public static volatile boolean allowUnlimitedConcurrentValidations = Boolean.getBoolean("cassandra.allow_unlimited_concurrent_validations");
 
     private static Function<CommitLog, AbstractCommitLogSegmentManager> commitLogSegmentMgrProvider = c -> DatabaseDescriptor.isCDCEnabled()
-                                       ? new CommitLogSegmentManagerCDC(c, DatabaseDescriptor.getCommitLogLocation())
-                                       : new CommitLogSegmentManagerStandard(c, DatabaseDescriptor.getCommitLogLocation());
+                                                                                                           ? new CommitLogSegmentManagerCDC(c, DatabaseDescriptor.getCommitLogLocation())
+                                                                                                           : new CommitLogSegmentManagerStandard(c, DatabaseDescriptor.getCommitLogLocation());
 
     public static void daemonInitialization() throws ConfigurationException
     {
@@ -553,7 +553,6 @@ public class DatabaseDescriptor
                                                                              "commitlog_total_space_in_mb",
                                                                              preferredSizeInMB,
                                                                              totalSpaceInBytes, 1, 4);
-
             }
             catch (IOException e)
             {
@@ -763,10 +762,10 @@ public class DatabaseDescriptor
 
         if (conf.commitlog_segment_size_in_mb <= 0)
             throw new ConfigurationException("commitlog_segment_size_in_mb must be positive, but was "
-                    + conf.commitlog_segment_size_in_mb, false);
+                                             + conf.commitlog_segment_size_in_mb, false);
         else if (conf.commitlog_segment_size_in_mb >= 2048)
             throw new ConfigurationException("commitlog_segment_size_in_mb must be smaller than 2048, but was "
-                    + conf.commitlog_segment_size_in_mb, false);
+                                             + conf.commitlog_segment_size_in_mb, false);
 
         if (conf.max_mutation_size_in_kb == null)
             conf.max_mutation_size_in_kb = conf.commitlog_segment_size_in_mb * 1024 / 2;
@@ -793,7 +792,7 @@ public class DatabaseDescriptor
             throw new ConfigurationException("max_value_size_in_mb must be positive", false);
         else if (conf.max_value_size_in_mb >= 2048)
             throw new ConfigurationException("max_value_size_in_mb must be smaller than 2048, but was "
-                    + conf.max_value_size_in_mb, false);
+                                             + conf.max_value_size_in_mb, false);
 
         switch (conf.disk_optimization_strategy)
         {
@@ -833,8 +832,8 @@ public class DatabaseDescriptor
         else
         {
             conf.internode_max_message_size_in_bytes =
-                Math.min(conf.internode_application_receive_queue_reserve_endpoint_capacity_in_bytes,
-                         conf.internode_application_send_queue_reserve_endpoint_capacity_in_bytes);
+            Math.min(conf.internode_application_receive_queue_reserve_endpoint_capacity_in_bytes,
+                     conf.internode_application_send_queue_reserve_endpoint_capacity_in_bytes);
         }
 
         validateMaxConcurrentAutoUpgradeTasksConf(conf.max_concurrent_automatic_sstable_upgrades);
@@ -1022,7 +1021,7 @@ public class DatabaseDescriptor
         try
         {
             Class<?> seedProviderClass = Class.forName(conf.seed_provider.class_name);
-            seedProvider = (SeedProvider)seedProviderClass.getConstructor(Map.class).newInstance(conf.seed_provider.parameters);
+            seedProvider = (SeedProvider) seedProviderClass.getConstructor(Map.class).newInstance(conf.seed_provider.parameters);
         }
         // there are about 5 checked exceptions that could be thrown here.
         catch (Exception e)
@@ -1036,46 +1035,46 @@ public class DatabaseDescriptor
     @VisibleForTesting
     static void checkForLowestAcceptedTimeouts(Config conf)
     {
-        if(conf.read_request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
+        if (conf.read_request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
         {
-           logInfo("read_request_timeout_in_ms", conf.read_request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
-           conf.read_request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
+            logInfo("read_request_timeout_in_ms", conf.read_request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
+            conf.read_request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
         }
 
-        if(conf.range_request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
+        if (conf.range_request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
         {
-           logInfo("range_request_timeout_in_ms", conf.range_request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
-           conf.range_request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
+            logInfo("range_request_timeout_in_ms", conf.range_request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
+            conf.range_request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
         }
 
-        if(conf.request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
+        if (conf.request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
         {
-           logInfo("request_timeout_in_ms", conf.request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
-           conf.request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
+            logInfo("request_timeout_in_ms", conf.request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
+            conf.request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
         }
 
-        if(conf.write_request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
+        if (conf.write_request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
         {
-           logInfo("write_request_timeout_in_ms", conf.write_request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
-           conf.write_request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
+            logInfo("write_request_timeout_in_ms", conf.write_request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
+            conf.write_request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
         }
 
-        if(conf.cas_contention_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
+        if (conf.cas_contention_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
         {
-           logInfo("cas_contention_timeout_in_ms", conf.cas_contention_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
-           conf.cas_contention_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
+            logInfo("cas_contention_timeout_in_ms", conf.cas_contention_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
+            conf.cas_contention_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
         }
 
-        if(conf.counter_write_request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
+        if (conf.counter_write_request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
         {
-           logInfo("counter_write_request_timeout_in_ms", conf.counter_write_request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
-           conf.counter_write_request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
+            logInfo("counter_write_request_timeout_in_ms", conf.counter_write_request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
+            conf.counter_write_request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
         }
 
-        if(conf.truncate_request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
+        if (conf.truncate_request_timeout_in_ms < LOWEST_ACCEPTED_TIMEOUT)
         {
-           logInfo("truncate_request_timeout_in_ms", conf.truncate_request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
-           conf.truncate_request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
+            logInfo("truncate_request_timeout_in_ms", conf.truncate_request_timeout_in_ms, LOWEST_ACCEPTED_TIMEOUT);
+            conf.truncate_request_timeout_in_ms = LOWEST_ACCEPTED_TIMEOUT;
         }
     }
 
@@ -1172,7 +1171,7 @@ public class DatabaseDescriptor
     /**
      * Computes the sum of the 2 specified positive values returning {@code Long.MAX_VALUE} if the sum overflow.
      *
-     * @param left the left operand
+     * @param left  the left operand
      * @param right the right operand
      * @return the sum of the 2 specified positive values of {@code Long.MAX_VALUE} if the sum overflow.
      */
@@ -1285,8 +1284,8 @@ public class DatabaseDescriptor
     public static int getPermissionsUpdateInterval()
     {
         return conf.permissions_update_interval_in_ms == -1
-             ? conf.permissions_validity_in_ms
-             : conf.permissions_update_interval_in_ms;
+               ? conf.permissions_validity_in_ms
+               : conf.permissions_update_interval_in_ms;
     }
 
     public static void setPermissionsUpdateInterval(int updateInterval)
@@ -1317,8 +1316,8 @@ public class DatabaseDescriptor
     public static int getRolesUpdateInterval()
     {
         return conf.roles_update_interval_in_ms == -1
-             ? conf.roles_validity_in_ms
-             : conf.roles_update_interval_in_ms;
+               ? conf.roles_validity_in_ms
+               : conf.roles_update_interval_in_ms;
     }
 
     public static void setRolesUpdateInterval(int interval)
@@ -1415,7 +1414,7 @@ public class DatabaseDescriptor
         }
         catch (ConfigurationException e)
         {
-            throw new IllegalArgumentException("Bad configuration; unable to start server: "+e.getMessage());
+            throw new IllegalArgumentException("Bad configuration; unable to start server: " + e.getMessage());
         }
         catch (FSWriteError e)
         {
@@ -1445,6 +1444,7 @@ public class DatabaseDescriptor
     {
         return snitch;
     }
+
     public static void setEndpointSnitch(IEndpointSnitch eps)
     {
         snitch = eps;
@@ -1574,7 +1574,8 @@ public class DatabaseDescriptor
         try
         {
             return UUID.fromString(System.getProperty(Config.PROPERTY_PREFIX + "replace_node", null));
-        } catch (NullPointerException e)
+        }
+        catch (NullPointerException e)
         {
             return null;
         }
@@ -1799,7 +1800,10 @@ public class DatabaseDescriptor
         conf.compaction_throughput_mb_per_sec = value;
     }
 
-    public static long getCompactionLargePartitionWarningThreshold() { return ByteUnit.MEBI_BYTES.toBytes(conf.compaction_large_partition_warning_threshold_mb); }
+    public static long getCompactionLargePartitionWarningThreshold()
+    {
+        return ByteUnit.MEBI_BYTES.toBytes(conf.compaction_large_partition_warning_threshold_mb);
+    }
 
     public static int getConcurrentValidations()
     {
@@ -1879,10 +1883,10 @@ public class DatabaseDescriptor
     public static String[] getLocalSystemKeyspacesDataFileLocations()
     {
         if (useSpecificLocationForLocalSystemData())
-            return new String[] {conf.local_system_data_file_directory};
+            return new String[]{ conf.local_system_data_file_directory };
 
-        return conf.data_file_directories.length == 0  ? conf.data_file_directories
-                                                       : new String[] {conf.data_file_directories[0]};
+        return conf.data_file_directories.length == 0 ? conf.data_file_directories
+                                                      : new String[]{ conf.data_file_directories[0] };
     }
 
     /**
@@ -1939,11 +1943,11 @@ public class DatabaseDescriptor
         conf.flush_compression = compression;
     }
 
-   /**
-    * Maximum number of buffers in the compression pool. The default value is 3, it should not be set lower than that
-    * (one segment in compression, one written to, one in reserve); delays in compression may cause the log to use
-    * more, depending on how soon the sync policy stops all writing threads.
-    */
+    /**
+     * Maximum number of buffers in the compression pool. The default value is 3, it should not be set lower than that
+     * (one segment in compression, one written to, one in reserve); delays in compression may cause the log to use
+     * more, depending on how soon the sync policy stops all writing threads.
+     */
     public static int getCommitLogMaxCompressionBuffersInPool()
     {
         return conf.commitlog_max_compression_buffers_in_pool;
@@ -2099,7 +2103,7 @@ public class DatabaseDescriptor
      * refer to it as native address although some places still call it RPC address. It's not thrift RPC anymore
      * so native is more appropriate. The address alone is not enough to uniquely identify this instance because
      * multiple instances might use the same interface with different ports.
-     *
+     * <p>
      * May be null, please use {@link FBUtilities#getBroadcastNativeAddressAndPort()} instead.
      */
     public static InetAddress getBroadcastRpcAddress()
@@ -2199,8 +2203,8 @@ public class DatabaseDescriptor
     }
 
     /**
-     *  This is the port used with RPC address for the native protocol to communicate with clients. Now that thrift RPC
-     *  is no longer in use there is no RPC port.
+     * This is the port used with RPC address for the native protocol to communicate with clients. Now that thrift RPC
+     * is no longer in use there is no RPC port.
      */
     public static int getNativeTransportPort()
     {
@@ -2323,7 +2327,7 @@ public class DatabaseDescriptor
     {
         Integer blockMillis = conf.periodic_commitlog_sync_lag_block_in_ms;
         return blockMillis == null
-               ? (long)(getCommitLogSyncPeriod() * 1.5)
+               ? (long) (getCommitLogSyncPeriod() * 1.5)
                : blockMillis;
     }
 
@@ -2401,6 +2405,7 @@ public class DatabaseDescriptor
     {
         conf.auto_snapshot = autoSnapshot;
     }
+
     @VisibleForTesting
     public static boolean getAutoSnapshot()
     {
@@ -2473,7 +2478,7 @@ public class DatabaseDescriptor
     public static File getSerializedCachePath(CacheType cacheType, String version, String extension)
     {
         String name = cacheType.toString()
-                + (version == null ? "" : '-' + version + '.' + extension);
+                      + (version == null ? "" : '-' + version + '.' + extension);
         return new File(conf.saved_caches_directory, name);
     }
 
@@ -2481,6 +2486,7 @@ public class DatabaseDescriptor
     {
         return conf.dynamic_snitch_update_interval_in_ms;
     }
+
     public static void setDynamicUpdateInterval(int dynamicUpdateInterval)
     {
         conf.dynamic_snitch_update_interval_in_ms = dynamicUpdateInterval;
@@ -2490,6 +2496,7 @@ public class DatabaseDescriptor
     {
         return conf.dynamic_snitch_reset_interval_in_ms;
     }
+
     public static void setDynamicResetInterval(int dynamicResetInterval)
     {
         conf.dynamic_snitch_reset_interval_in_ms = dynamicResetInterval;
@@ -2558,7 +2565,7 @@ public class DatabaseDescriptor
 
     public static long getMaxHintsFileSize()
     {
-        return  ByteUnit.MEBI_BYTES.toBytes(conf.max_hints_file_size_in_mb);
+        return ByteUnit.MEBI_BYTES.toBytes(conf.max_hints_file_size_in_mb);
     }
 
     public static ParameterizedClass getHintsCompression()
@@ -2650,6 +2657,7 @@ public class DatabaseDescriptor
     {
         return FBUtilities.isWindows ? -1 : conf.sstable_preemptive_open_interval_in_mb;
     }
+
     public static void setSSTablePreemptiveOpenIntervalInMB(int mb)
     {
         conf.sstable_preemptive_open_interval_in_mb = mb;
@@ -2873,8 +2881,10 @@ public class DatabaseDescriptor
         {
             switch (datamodel)
             {
-                case "64": return true;
-                case "32": return false;
+                case "64":
+                    return true;
+                case "32":
+                    return false;
             }
         }
         String arch = OS_ARCH.getString();
@@ -3097,7 +3107,7 @@ public class DatabaseDescriptor
 
     public static FullQueryLoggerOptions getFullQueryLogOptions()
     {
-        return  conf.full_query_logging_options;
+        return conf.full_query_logging_options;
     }
 
     public static boolean getBlockForPeersInRemoteDatacenters()
@@ -3142,7 +3152,7 @@ public class DatabaseDescriptor
         if (value > getConcurrentCompactors())
             logger.warn("max_concurrent_automatic_sstable_upgrades ({}) is larger than concurrent_compactors ({})", value, getConcurrentCompactors());
     }
-    
+
     public static AuditLogOptions getAuditLoggingOptions()
     {
         return conf.audit_logging_options;
@@ -3242,7 +3252,8 @@ public class DatabaseDescriptor
     /**
      * Class that primarily tracks overflow thresholds during conversions
      */
-    private enum ByteUnit {
+    private enum ByteUnit
+    {
         KIBI_BYTES(2048 * 1024, 1024),
         MEBI_BYTES(2048, 1024 * 1024);
 

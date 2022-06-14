@@ -18,43 +18,34 @@
 
 package org.apache.cassandra.locator.eft;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
-public final class KeyMap
+public class PendingState
 {
-    public final static KeyMap instance = new KeyMap();
+    private final AtomicLong expectedFinishTimeNanos = new AtomicLong(0);
 
-    private final Map<String, Long> sizes = new HashMap<>();
-
-    public void putInMemory(File file) throws IOException
+    public void add(String key)
     {
-        try (BufferedReader reader = new BufferedReader(new FileReader(file)))
+        long size = KeyMap.instance.getSizes().get(key);
+        long processingTimeNanos = getProcessingTime(size);
+
+        long currentTimeNanos, finishTimeNanos, newFinishTimeNanos;
+
+        do
         {
-            String line;
-
-            while ((line = reader.readLine()) != null)
-            {
-                String[] cells = line.split(",");
-                String key = cells[0];
-                long size = Long.parseLong(cells[1]);
-
-                sizes.put(key, size);
-            }
-        }
+            currentTimeNanos = System.nanoTime();
+            finishTimeNanos = expectedFinishTimeNanos.get();
+            newFinishTimeNanos = Math.max(currentTimeNanos, finishTimeNanos) + processingTimeNanos;
+        } while (!expectedFinishTimeNanos.compareAndSet(finishTimeNanos, newFinishTimeNanos));
     }
 
-    public Map<String, Long> getSizes()
+    public long getFinishTime()
     {
-        return sizes;
+        return expectedFinishTimeNanos.get();
     }
 
-    public boolean containsKey(String key)
+    public static long getProcessingTime(long size)
     {
-        return sizes.containsKey(key);
+        return size;
     }
 }
