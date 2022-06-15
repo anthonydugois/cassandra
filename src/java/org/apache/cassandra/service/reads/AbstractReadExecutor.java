@@ -182,7 +182,7 @@ public abstract class AbstractReadExecutor
         EndpointsForToken selected = replicaPlan().contacts();
         EndpointsForToken fullDataRequests = selected.filter(Replica::isFull, initialDataRequestCount);
 
-        if (command instanceof SinglePartitionReadCommand)
+        if (KeyMap.instance.isLoaded() && command instanceof SinglePartitionReadCommand)
         {
             SinglePartitionReadCommand readCommand = (SinglePartitionReadCommand) command;
             String key = new String(readCommand.partitionKey().getKey().array(), StandardCharsets.UTF_8);

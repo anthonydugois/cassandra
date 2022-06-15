@@ -7,3 +7,4 @@ src/gen-java/
 src/resources/org/apache/cassandra/config/
 logs/
 data/
+csv/

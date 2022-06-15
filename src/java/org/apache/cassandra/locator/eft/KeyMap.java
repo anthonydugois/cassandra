@@ -31,6 +31,8 @@ public final class KeyMap
 
     private final Map<String, Long> sizes = new HashMap<>();
 
+    private boolean isLoaded = false;
+
     public void putInMemory(File file) throws IOException
     {
         try (BufferedReader reader = new BufferedReader(new FileReader(file)))
@@ -45,7 +47,14 @@ public final class KeyMap
 
                 sizes.put(key, size);
             }
+
+            isLoaded = true;
         }
+    }
+
+    public boolean isLoaded()
+    {
+        return isLoaded;
     }
 
     public Map<String, Long> getSizes()
