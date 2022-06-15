@@ -46,7 +46,9 @@ public abstract class Message
 {
     protected static final Logger logger = LoggerFactory.getLogger(Message.class);
 
-    public interface Codec<M extends Message> extends CBCodec<M> {}
+    public interface Codec<M extends Message> extends CBCodec<M>
+    {
+    }
 
     public enum Direction
     {
@@ -65,31 +67,32 @@ public abstract class Message
 
     public enum Type
     {
-        ERROR          (0,  Direction.RESPONSE, ErrorMessage.codec),
-        STARTUP        (1,  Direction.REQUEST,  StartupMessage.codec),
-        READY          (2,  Direction.RESPONSE, ReadyMessage.codec),
-        AUTHENTICATE   (3,  Direction.RESPONSE, AuthenticateMessage.codec),
-        CREDENTIALS    (4,  Direction.REQUEST,  UnsupportedMessageCodec.instance),
-        OPTIONS        (5,  Direction.REQUEST,  OptionsMessage.codec),
-        SUPPORTED      (6,  Direction.RESPONSE, SupportedMessage.codec),
-        QUERY          (7,  Direction.REQUEST,  QueryMessage.codec),
-        RESULT         (8,  Direction.RESPONSE, ResultMessage.codec),
-        PREPARE        (9,  Direction.REQUEST,  PrepareMessage.codec),
-        EXECUTE        (10, Direction.REQUEST,  ExecuteMessage.codec),
-        REGISTER       (11, Direction.REQUEST,  RegisterMessage.codec),
-        EVENT          (12, Direction.RESPONSE, EventMessage.codec),
-        BATCH          (13, Direction.REQUEST,  BatchMessage.codec),
-        AUTH_CHALLENGE (14, Direction.RESPONSE, AuthChallenge.codec),
-        AUTH_RESPONSE  (15, Direction.REQUEST,  AuthResponse.codec),
-        AUTH_SUCCESS   (16, Direction.RESPONSE, AuthSuccess.codec);
-        // SIGNAL         (17, Direction.REQUEST, SignalMessage.codec),
-        // SIGNAL_SUCCESS (18, Direction.RESPONSE, SignalSuccess.codec);
+        ERROR(0, Direction.RESPONSE, ErrorMessage.codec),
+        STARTUP(1, Direction.REQUEST, StartupMessage.codec),
+        READY(2, Direction.RESPONSE, ReadyMessage.codec),
+        AUTHENTICATE(3, Direction.RESPONSE, AuthenticateMessage.codec),
+        CREDENTIALS(4, Direction.REQUEST, UnsupportedMessageCodec.instance),
+        OPTIONS(5, Direction.REQUEST, OptionsMessage.codec),
+        SUPPORTED(6, Direction.RESPONSE, SupportedMessage.codec),
+        QUERY(7, Direction.REQUEST, QueryMessage.codec),
+        RESULT(8, Direction.RESPONSE, ResultMessage.codec),
+        PREPARE(9, Direction.REQUEST, PrepareMessage.codec),
+        EXECUTE(10, Direction.REQUEST, ExecuteMessage.codec),
+        REGISTER(11, Direction.REQUEST, RegisterMessage.codec),
+        EVENT(12, Direction.RESPONSE, EventMessage.codec),
+        BATCH(13, Direction.REQUEST, BatchMessage.codec),
+        AUTH_CHALLENGE(14, Direction.RESPONSE, AuthChallenge.codec),
+        AUTH_RESPONSE(15, Direction.REQUEST, AuthResponse.codec),
+        AUTH_SUCCESS(16, Direction.RESPONSE, AuthSuccess.codec),
+        SIGNAL(17, Direction.REQUEST, SignalMessage.codec),
+        SIGNAL_SUCCESS(18, Direction.RESPONSE, SignalSuccess.codec);
 
         public final int opcode;
         public final Direction direction;
         public final Codec<?> codec;
 
         private static final Type[] opcodeIdx;
+
         static
         {
             int maxOpcode = -1;
@@ -196,7 +199,7 @@ public abstract class Message
 
     public String debugString()
     {
-        return String.format("(%s:%s:%s)", type, streamId, connection == null ? "null" :  connection.getVersion().asInt());
+        return String.format("(%s:%s:%s)", type, streamId, connection == null ? "null" : connection.getVersion().asInt());
     }
 
     public static abstract class Request extends Message
@@ -306,14 +309,14 @@ public abstract class Message
     {
         EnumSet<Envelope.Header.Flag> flags = EnumSet.noneOf(Envelope.Header.Flag.class);
         @SuppressWarnings("unchecked")
-        Codec<Message> codec = (Codec<Message>)this.type.codec;
+        Codec<Message> codec = (Codec<Message>) this.type.codec;
         try
         {
             int messageSize = codec.encodedSize(this, version);
             ByteBuf body;
             if (this instanceof Response)
             {
-                Response message = (Response)this;
+                Response message = (Response) this;
                 UUID tracingId = message.getTracingId();
                 Map<String, ByteBuffer> customPayload = message.getCustomPayload();
                 if (tracingId != null)
@@ -351,7 +354,7 @@ public abstract class Message
             else
             {
                 assert this instanceof Request;
-                if (((Request)this).isTracingRequested())
+                if (((Request) this).isTracingRequested())
                     flags.add(Envelope.Header.Flag.TRACING);
                 Map<String, ByteBuffer> payload = getCustomPayload();
                 if (payload != null)

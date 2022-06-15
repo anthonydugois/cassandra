@@ -18,10 +18,7 @@
 
 package org.apache.cassandra.transport.messages;
 
-import java.io.File;
-
 import io.netty.buffer.ByteBuf;
-import org.apache.cassandra.locator.eft.KeyMap;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.transport.Message;
 import org.apache.cassandra.transport.ProtocolVersion;
@@ -58,7 +55,7 @@ public class SignalMessage extends Message.Request
     {
         try
         {
-            // KeyMap.instance.putInMemory("src/resources/org/apache/cassandra/data.csv");
+            // KeyMap.instance.putInMemory("src/resources/org/apache/cassandra/keymap.csv");
         }
         catch (Exception exception)
         {
