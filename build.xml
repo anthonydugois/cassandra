@@ -319,7 +319,7 @@
         <copy todir="${dir.dist}/lib">
             <fileset dir="${dir.lib}"/>
             <fileset dir="${dir.build}">
-                <include name="${final.name}.jar" />
+                <include name="${final.name}.jar"/>
             </fileset>
         </copy>
         <copy todir="${dir.dist}/bin">
@@ -663,12 +663,12 @@
         <mkdir dir="${dir.lib}/sigar-bin"/>
 
         <!-- apache/cassandra/lib -->
-        <get dest="${dir.lib}/"
+        <!--<get dest="${dir.lib}/"
              quiet="true"
              usetimestamp="true"
              skipexisting="true">
             <url url="https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.17.0/jmx_prometheus_javaagent-0.17.0.jar"/>
-        </get>
+        </get>-->
 
         <get dest="${local.repository}/org/apache/cassandra/deps/sigar-bin/"
              quiet="true"

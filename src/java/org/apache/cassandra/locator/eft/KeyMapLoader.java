@@ -31,21 +31,21 @@ public class KeyMapLoader
 {
     public final static String DEFAULT_PATHNAME = "/csv/keymap.csv";
 
-    public final static long DEFAULT_DELAY_MILLIS = 3 * 1000;
+    public final static long DEFAULT_DELAY_MILLIS = 60000;
 
-    public final static KeyMapLoader instance = new KeyMapLoader(DEFAULT_PATHNAME, DEFAULT_DELAY_MILLIS);
+    public final static KeyMapLoader instance = new KeyMapLoader(new File(DEFAULT_PATHNAME), DEFAULT_DELAY_MILLIS);
 
     public final static Logger logger = LoggerFactory.getLogger(KeyMapLoader.class);
 
     private ScheduledFuture<?> schedular;
 
-    private final String pathname;
+    private final File file;
 
     private final long delay;
 
-    public KeyMapLoader(String pathname, long delay)
+    public KeyMapLoader(File file, long delay)
     {
-        this.pathname = pathname;
+        this.file = file;
         this.delay = delay;
     }
 
@@ -57,8 +57,6 @@ public class KeyMapLoader
         }
         else
         {
-            File file = new File(pathname);
-
             if (file.exists())
             {
                 cancel();
