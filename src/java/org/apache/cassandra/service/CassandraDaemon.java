@@ -71,6 +71,7 @@ import org.apache.cassandra.io.sstable.CorruptSSTableException;
 import org.apache.cassandra.io.sstable.SSTableHeaderFix;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.locator.InetAddressAndPort;
+import org.apache.cassandra.locator.eft.EFTSnitch;
 import org.apache.cassandra.locator.eft.KeyMapLoader;
 import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.metrics.DefaultNameFactory;
@@ -778,7 +779,10 @@ public class CassandraDaemon
 
             start();
 
-            KeyMapLoader.instance.start();
+            if (DatabaseDescriptor.getEndpointSnitch() instanceof EFTSnitch)
+            {
+                KeyMapLoader.instance.start();
+            }
 
             logger.info("Startup complete");
         }

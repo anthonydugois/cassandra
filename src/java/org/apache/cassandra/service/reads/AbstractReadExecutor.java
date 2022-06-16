@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.concurrent.Stage;
+import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.ColumnFamilyStore;
 import org.apache.cassandra.db.ConsistencyLevel;
 import org.apache.cassandra.db.DecoratedKey;
@@ -41,6 +42,7 @@ import org.apache.cassandra.locator.Replica;
 import org.apache.cassandra.locator.ReplicaCollection;
 import org.apache.cassandra.locator.ReplicaPlan;
 import org.apache.cassandra.locator.ReplicaPlans;
+import org.apache.cassandra.locator.eft.EFTSnitch;
 import org.apache.cassandra.locator.eft.KeyMap;
 import org.apache.cassandra.locator.eft.PendingStates;
 import org.apache.cassandra.net.Message;
@@ -182,10 +184,10 @@ public abstract class AbstractReadExecutor
         EndpointsForToken selected = replicaPlan().contacts();
         EndpointsForToken fullDataRequests = selected.filter(Replica::isFull, initialDataRequestCount);
 
-        if (KeyMap.instance.isLoaded() && command instanceof SinglePartitionReadCommand)
+        if (DatabaseDescriptor.getEndpointSnitch() instanceof EFTSnitch && KeyMap.instance.isLoaded() && command instanceof SinglePartitionReadCommand)
         {
-            SinglePartitionReadCommand readCommand = (SinglePartitionReadCommand) command;
-            String key = new String(readCommand.partitionKey().getKey().array(), StandardCharsets.UTF_8);
+            SinglePartitionReadCommand read = (SinglePartitionReadCommand) command;
+            String key = new String(read.partitionKey().getKey().array(), StandardCharsets.UTF_8);
 
             if (KeyMap.instance.containsKey(key))
             {
