@@ -49,18 +49,18 @@ import static java.util.stream.Collectors.toMap;
 
 public enum Stage
 {
-    READ              ("ReadStage",             "request",  DatabaseDescriptor::getConcurrentReaders,        DatabaseDescriptor::setConcurrentReaders,        Stage::multiThreadedLowSignalStage),
-    MUTATION          ("MutationStage",         "request",  DatabaseDescriptor::getConcurrentWriters,        DatabaseDescriptor::setConcurrentWriters,        Stage::multiThreadedLowSignalStage),
-    COUNTER_MUTATION  ("CounterMutationStage",  "request",  DatabaseDescriptor::getConcurrentCounterWriters, DatabaseDescriptor::setConcurrentCounterWriters, Stage::multiThreadedLowSignalStage),
-    VIEW_MUTATION     ("ViewMutationStage",     "request",  DatabaseDescriptor::getConcurrentViewWriters,    DatabaseDescriptor::setConcurrentViewWriters,    Stage::multiThreadedLowSignalStage),
-    GOSSIP            ("GossipStage",           "internal", () -> 1,                                         null,                                            Stage::singleThreadedStage),
-    REQUEST_RESPONSE  ("RequestResponseStage",  "request",  FBUtilities::getAvailableProcessors,             null,                                            Stage::multiThreadedLowSignalStage),
-    ANTI_ENTROPY      ("AntiEntropyStage",      "internal", () -> 1,                                         null,                                            Stage::singleThreadedStage),
-    MIGRATION         ("MigrationStage",        "internal", () -> 1,                                         null,                                            Stage::singleThreadedStage),
-    MISC              ("MiscStage",             "internal", () -> 1,                                         null,                                            Stage::singleThreadedStage),
-    TRACING           ("TracingStage",          "internal", () -> 1,                                         null,                                            Stage::tracingExecutor),
-    INTERNAL_RESPONSE ("InternalResponseStage", "internal", FBUtilities::getAvailableProcessors,             null,                                            Stage::multiThreadedStage),
-    IMMEDIATE         ("ImmediateStage",        "internal", () -> 0,                                         null,                                            Stage::immediateExecutor);
+    READ("ReadStage", "request", DatabaseDescriptor::getConcurrentReaders, DatabaseDescriptor::setConcurrentReaders, Stage::multiThreadedLowSignalStage),
+    MUTATION("MutationStage", "request", DatabaseDescriptor::getConcurrentWriters, DatabaseDescriptor::setConcurrentWriters, Stage::multiThreadedLowSignalStage),
+    COUNTER_MUTATION("CounterMutationStage", "request", DatabaseDescriptor::getConcurrentCounterWriters, DatabaseDescriptor::setConcurrentCounterWriters, Stage::multiThreadedLowSignalStage),
+    VIEW_MUTATION("ViewMutationStage", "request", DatabaseDescriptor::getConcurrentViewWriters, DatabaseDescriptor::setConcurrentViewWriters, Stage::multiThreadedLowSignalStage),
+    GOSSIP("GossipStage", "internal", () -> 1, null, Stage::singleThreadedStage),
+    REQUEST_RESPONSE("RequestResponseStage", "request", FBUtilities::getAvailableProcessors, null, Stage::multiThreadedLowSignalStage),
+    ANTI_ENTROPY("AntiEntropyStage", "internal", () -> 1, null, Stage::singleThreadedStage),
+    MIGRATION("MigrationStage", "internal", () -> 1, null, Stage::singleThreadedStage),
+    MISC("MiscStage", "internal", () -> 1, null, Stage::singleThreadedStage),
+    TRACING("TracingStage", "internal", () -> 1, null, Stage::tracingExecutor),
+    INTERNAL_RESPONSE("InternalResponseStage", "internal", FBUtilities::getAvailableProcessors, null, Stage::multiThreadedStage),
+    IMMEDIATE("ImmediateStage", "internal", () -> 0, null, Stage::immediateExecutor);
 
     public static final long KEEP_ALIVE_SECONDS = 60; // seconds to keep "extra" threads alive for when idle
     public final String jmxName;
@@ -84,9 +84,9 @@ public enum Stage
         return upperStageName;
     }
 
-    private static final Map<String,Stage> nameMap = Arrays.stream(values())
-                                                           .collect(toMap(s -> Stage.normalizeName(s.jmxName),
-                                                                          s -> s));
+    private static final Map<String, Stage> nameMap = Arrays.stream(values())
+                                                            .collect(toMap(s -> Stage.normalizeName(s.jmxName),
+                                                                           s -> s));
 
     public static Stage fromPoolName(String stageName)
     {
@@ -102,7 +102,7 @@ public enum Stage
         }
         catch (IllegalArgumentException e)
         {
-            switch(upperStageName) // Handle discrepancy between configuration file and stage names
+            switch (upperStageName) // Handle discrepancy between configuration file and stage names
             {
                 case "CONCURRENT_READS":
                     return READ;
@@ -121,12 +121,35 @@ public enum Stage
     }
 
     // Convenience functions to execute on this stage
-    public void execute(Runnable command) { executor().execute(command); }
-    public void execute(Runnable command, ExecutorLocals locals) { executor().execute(command, locals); }
-    public void maybeExecuteImmediately(Runnable command) { executor().maybeExecuteImmediately(command); }
-    public <T> Future<T> submit(Callable<T> task) { return executor().submit(task); }
-    public Future<?> submit(Runnable task) { return executor().submit(task); }
-    public <T> Future<T> submit(Runnable task, T result) { return executor().submit(task, result); }
+    public void execute(Runnable command)
+    {
+        executor().execute(command);
+    }
+
+    public void execute(Runnable command, ExecutorLocals locals)
+    {
+        executor().execute(command, locals);
+    }
+
+    public void maybeExecuteImmediately(Runnable command)
+    {
+        executor().maybeExecuteImmediately(command);
+    }
+
+    public <T> Future<T> submit(Callable<T> task)
+    {
+        return executor().submit(task);
+    }
+
+    public Future<?> submit(Runnable task)
+    {
+        return executor().submit(task);
+    }
+
+    public <T> Future<T> submit(Runnable task, T result)
+    {
+        return executor().submit(task, result);
+    }
 
     public LocalAwareExecutorService executor()
     {
@@ -239,6 +262,11 @@ public enum Stage
     public void setMaximumPoolSize(int newMaximumPoolSize)
     {
         executor().setMaximumPoolSize(newMaximumPoolSize);
+    }
+
+    public int getPendingTaskCount()
+    {
+        return executor().getPendingTaskCount();
     }
 
     /**

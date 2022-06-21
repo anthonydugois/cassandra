@@ -77,7 +77,7 @@ public class KeyMapLoader
 
     public void start()
     {
-        schedular = ScheduledExecutors.scheduledTasks.scheduleWithFixedDelay(this::tryLoading, delay, delay, TimeUnit.MILLISECONDS);
+        schedular = ScheduledExecutors.scheduledTasks.scheduleWithFixedDelay(this::tryLoading, 0, delay, TimeUnit.MILLISECONDS);
     }
 
     public void cancel()

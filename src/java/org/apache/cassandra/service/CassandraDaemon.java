@@ -51,6 +51,7 @@ import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import org.apache.cassandra.audit.AuditLogManager;
 import org.apache.cassandra.concurrent.ScheduledExecutors;
+import org.apache.cassandra.concurrent.tracing.TaskQueueTracer;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.cql3.QueryProcessor;
 import org.apache.cassandra.db.ColumnFamilyStore;
@@ -783,6 +784,8 @@ public class CassandraDaemon
             {
                 KeyMapLoader.instance.start();
             }
+
+            TaskQueueTracer.instance.start();
 
             logger.info("Startup complete");
         }
