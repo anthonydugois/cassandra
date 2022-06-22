@@ -783,9 +783,8 @@ public class CassandraDaemon
             if (DatabaseDescriptor.getEndpointSnitch() instanceof EFTSnitch)
             {
                 KeyMapLoader.instance.start();
+                TaskQueueTracer.instance.start();
             }
-
-            TaskQueueTracer.instance.start();
 
             logger.info("Startup complete");
         }

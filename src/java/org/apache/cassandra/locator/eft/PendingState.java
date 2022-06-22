@@ -22,9 +22,31 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class PendingState
 {
+    private final AtomicLong pendingCount = new AtomicLong(0);
+
     private final AtomicLong expectedFinishTimeNanos = new AtomicLong(0);
 
-    public void add(String key)
+    public long getPendingCount()
+    {
+        return pendingCount.get();
+    }
+
+    public long getExpectedFinishTime()
+    {
+        return expectedFinishTimeNanos.get();
+    }
+
+    private void increasePendingCount()
+    {
+        pendingCount.incrementAndGet();
+    }
+
+    private void decreasePendingCount()
+    {
+        pendingCount.decrementAndGet();
+    }
+
+    private void updateExpectedFinishTime(String key)
     {
         long size = KeyMap.instance.getSizes().get(key);
         long processingTimeNanos = getProcessingTime(size);
@@ -39,9 +61,16 @@ public class PendingState
         } while (!expectedFinishTimeNanos.compareAndSet(finishTimeNanos, newFinishTimeNanos));
     }
 
-    public long getFinishTime()
+    public void add(String key)
     {
-        return expectedFinishTimeNanos.get();
+        increasePendingCount();
+
+        updateExpectedFinishTime(key);
+    }
+
+    public void remove(String key)
+    {
+        decreasePendingCount();
     }
 
     public static long getProcessingTime(long size)

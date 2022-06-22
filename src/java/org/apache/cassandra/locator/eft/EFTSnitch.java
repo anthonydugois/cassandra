@@ -33,15 +33,15 @@ public class EFTSnitch extends SimpleSnitch
     {
         assert address.equals(FBUtilities.getBroadcastAddressAndPort());
 
-        Map<InetAddressAndPort, Long> finishTimes = PendingStates.instance.snapshot();
+        Map<InetAddressAndPort, Long> states = PendingStates.instance.getPendingCounts();
 
-        return unsortedAddress.sorted((r1, r2) -> compareEndpoints(address, r1, r2, finishTimes));
+        return unsortedAddress.sorted((r1, r2) -> compareEndpoints(address, r1, r2, states));
     }
 
-    private int compareEndpoints(InetAddressAndPort target, Replica r1, Replica r2, Map<InetAddressAndPort, Long> finishTimes)
+    private int compareEndpoints(InetAddressAndPort target, Replica r1, Replica r2, Map<InetAddressAndPort, Long> states)
     {
-        Long t1 = finishTimes.getOrDefault(r1.endpoint(), 0L);
-        Long t2 = finishTimes.getOrDefault(r2.endpoint(), 0L);
+        Long t1 = states.getOrDefault(r1.endpoint(), 0L);
+        Long t2 = states.getOrDefault(r2.endpoint(), 0L);
 
         return t1.compareTo(t2);
     }

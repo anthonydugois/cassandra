@@ -31,6 +31,11 @@ public class PendingStates
 
     private final ConcurrentMap<InetAddressAndPort, PendingState> states = new ConcurrentHashMap<>();
 
+    public ConcurrentMap<InetAddressAndPort, PendingState> getStates()
+    {
+        return states;
+    }
+
     public void addPendingKey(Iterable<InetAddressAndPort> endpoints, String key)
     {
         for (InetAddressAndPort endpoint : endpoints)
@@ -39,7 +44,15 @@ public class PendingStates
         }
     }
 
-    private void add(InetAddressAndPort endpoint, String key)
+    public void removePendingKey(Iterable<InetAddressAndPort> endpoints, String key)
+    {
+        for (InetAddressAndPort endpoint : endpoints)
+        {
+            remove(endpoint, key);
+        }
+    }
+
+    private PendingState getState(InetAddressAndPort endpoint)
     {
         PendingState state = states.get(endpoint);
 
@@ -55,10 +68,39 @@ public class PendingStates
             }
         }
 
+        return state;
+    }
+
+    private void add(InetAddressAndPort endpoint, String key)
+    {
+        PendingState state = getState(endpoint);
+
         state.add(key);
     }
 
-    public Map<InetAddressAndPort, Long> snapshot()
+    private void remove(InetAddressAndPort endpoint, String key)
+    {
+        PendingState state = getState(endpoint);
+
+        state.remove(key);
+    }
+
+    public Map<InetAddressAndPort, Long> getPendingCounts()
+    {
+        Map<InetAddressAndPort, Long> pendingCounts = new HashMap<>();
+
+        for (Map.Entry<InetAddressAndPort, PendingState> entry : states.entrySet())
+        {
+            InetAddressAndPort endpoint = entry.getKey();
+            PendingState state = entry.getValue();
+
+            pendingCounts.put(endpoint, state.getPendingCount());
+        }
+
+        return pendingCounts;
+    }
+
+    public Map<InetAddressAndPort, Long> getFinishTimes()
     {
         Map<InetAddressAndPort, Long> finishTimes = new HashMap<>();
 
@@ -67,7 +109,7 @@ public class PendingStates
             InetAddressAndPort endpoint = entry.getKey();
             PendingState state = entry.getValue();
 
-            finishTimes.put(endpoint, state.getFinishTime());
+            finishTimes.put(endpoint, state.getExpectedFinishTime());
         }
 
         return finishTimes;

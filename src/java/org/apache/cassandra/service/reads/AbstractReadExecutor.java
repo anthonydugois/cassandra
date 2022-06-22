@@ -78,6 +78,10 @@ public abstract class AbstractReadExecutor
     private final int initialDataRequestCount;
     protected volatile PartitionIterator result = null;
 
+    private final boolean shouldRecordPending;
+    private final String currentKey;
+    private Iterable<InetAddressAndPort> currentEndpoints = null;
+
     AbstractReadExecutor(ColumnFamilyStore cfs, ReadCommand command, ReplicaPlan.ForTokenRead replicaPlan, int initialDataRequestCount, long queryStartNanoTime)
     {
         this.command = command;
@@ -100,6 +104,35 @@ public abstract class AbstractReadExecutor
         for (Replica replica : replicaPlan.contacts())
             digestVersion = Math.min(digestVersion, MessagingService.instance().versions.get(replica.endpoint()));
         command.setDigestVersion(digestVersion);
+
+        shouldRecordPending = DatabaseDescriptor.getEndpointSnitch() instanceof EFTSnitch && KeyMap.instance.isLoaded() && command instanceof SinglePartitionReadCommand;
+
+        if (shouldRecordPending)
+        {
+            currentKey = new String(((SinglePartitionReadCommand) command).partitionKey().getKey().array(), StandardCharsets.UTF_8);
+        }
+        else
+        {
+            currentKey = "";
+        }
+    }
+
+    private void addPending(Iterable<InetAddressAndPort> endpoints)
+    {
+        if (shouldRecordPending && KeyMap.instance.containsKey(currentKey))
+        {
+            currentEndpoints = endpoints;
+            PendingStates.instance.addPendingKey(endpoints, currentKey);
+        }
+    }
+
+    private void removePending()
+    {
+        if (shouldRecordPending && currentEndpoints != null)
+        {
+            PendingStates.instance.removePendingKey(currentEndpoints, currentKey);
+            currentEndpoints = null;
+        }
     }
 
     public DecoratedKey getKey()
@@ -184,16 +217,7 @@ public abstract class AbstractReadExecutor
         EndpointsForToken selected = replicaPlan().contacts();
         EndpointsForToken fullDataRequests = selected.filter(Replica::isFull, initialDataRequestCount);
 
-        if (DatabaseDescriptor.getEndpointSnitch() instanceof EFTSnitch && KeyMap.instance.isLoaded() && command instanceof SinglePartitionReadCommand)
-        {
-            SinglePartitionReadCommand read = (SinglePartitionReadCommand) command;
-            String key = new String(read.partitionKey().getKey().array(), StandardCharsets.UTF_8);
-
-            if (KeyMap.instance.containsKey(key))
-            {
-                PendingStates.instance.addPendingKey(fullDataRequests.endpoints(), key);
-            }
-        }
+        addPending(fullDataRequests.endpoints());
 
         makeFullDataRequests(fullDataRequests);
         makeTransientDataRequests(selected.filterLazily(Replica::isTransient));
@@ -406,6 +430,8 @@ public abstract class AbstractReadExecutor
                 throw e;
             }
         }
+
+        removePending();
 
         Tracing.customTrace("RECV_RESPONSE");
 
