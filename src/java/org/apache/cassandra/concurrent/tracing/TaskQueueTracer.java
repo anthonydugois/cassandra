@@ -72,9 +72,11 @@ public class TaskQueueTracer
 
         if (count > 0)
         {
+            String line = epoch + "," + count + '\n';
+
             try
             {
-                queueFileWriter.append(Long.toString(epoch)).append(",").append(Integer.toString(count)).append("\n");
+                queueFileWriter.append(line);
             }
             catch (Exception exception)
             {
@@ -89,19 +91,26 @@ public class TaskQueueTracer
 
         if (states.size() > 0)
         {
+            StringBuilder line = new StringBuilder();
+
+            line.append(epoch);
+
+            for (Map.Entry<InetAddressAndPort, PendingState> entry : states.entrySet())
+            {
+                InetAddressAndPort endpoint = entry.getKey();
+                PendingState state = entry.getValue();
+
+                line.append(',');
+                line.append(endpoint);
+                line.append(',');
+                line.append(state.getPendingCount());
+            }
+
+            line.append('\n');
+
             try
             {
-                stateFileWriter.append(Long.toString(epoch));
-
-                for (Map.Entry<InetAddressAndPort, PendingState> entry : states.entrySet())
-                {
-                    InetAddressAndPort endpoint = entry.getKey();
-                    PendingState state = entry.getValue();
-
-                    stateFileWriter.append(",").append(endpoint.toString()).append(",").append(Long.toString(state.getPendingCount()));
-                }
-
-                stateFileWriter.append("\n");
+                stateFileWriter.append(line);
             }
             catch (Exception exception)
             {
@@ -121,7 +130,7 @@ public class TaskQueueTracer
 
     public void start()
     {
-        schedular = ScheduledExecutors.scheduledTasks.scheduleWithFixedDelay(this::trace, 0, delay, TimeUnit.MILLISECONDS);
+        schedular = ScheduledExecutors.scheduledTasks.scheduleWithFixedDelay(this::trace, delay, delay, TimeUnit.MILLISECONDS);
     }
 
     public void cancel()
