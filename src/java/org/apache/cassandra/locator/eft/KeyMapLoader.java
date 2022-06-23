@@ -29,23 +29,28 @@ import org.apache.cassandra.concurrent.ScheduledExecutors;
 
 public class KeyMapLoader
 {
-    public final static String DEFAULT_PATHNAME = "/csv/keymap.csv";
+    public final static String DEFAULT_CSV_DIR = "/csv";
+
+    public final static String DEFAULT_CSV_PREFIX = "keymap";
 
     public final static long DEFAULT_DELAY_MILLIS = 60000;
 
-    public final static KeyMapLoader instance = new KeyMapLoader(new File(DEFAULT_PATHNAME), DEFAULT_DELAY_MILLIS);
+    public final static KeyMapLoader instance = new KeyMapLoader(new File(DEFAULT_CSV_DIR), DEFAULT_CSV_PREFIX, DEFAULT_DELAY_MILLIS);
 
     public final static Logger logger = LoggerFactory.getLogger(KeyMapLoader.class);
 
     private ScheduledFuture<?> schedular;
 
-    private final File file;
+    private final File dir;
+
+    private final String prefix;
 
     private final long delay;
 
-    public KeyMapLoader(File file, long delay)
+    public KeyMapLoader(File dir, String prefix, long delay)
     {
-        this.file = file;
+        this.dir = dir;
+        this.prefix = prefix;
         this.delay = delay;
     }
 
@@ -57,13 +62,20 @@ public class KeyMapLoader
         }
         else
         {
-            if (file.exists())
+            if (dir.exists())
             {
                 cancel();
 
+                File[] files = dir.listFiles((file, name) -> name.toLowerCase().startsWith(prefix));
+
                 try
                 {
-                    KeyMap.instance.putInMemory(file);
+                    for (int i = 0; i < files.length; ++i)
+                    {
+                        KeyMap.instance.putInMemory(files[i]);
+                    }
+
+                    KeyMap.instance.setLoaded(true);
 
                     logger.info("Keymap has been successfully put in memory");
                 }

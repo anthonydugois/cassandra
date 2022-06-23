@@ -47,14 +47,17 @@ public final class KeyMap
 
                 sizes.put(key, size);
             }
-
-            isLoaded = true;
         }
     }
 
     public boolean isLoaded()
     {
         return isLoaded;
+    }
+
+    public void setLoaded(boolean loaded)
+    {
+        isLoaded = loaded;
     }
 
     public Map<String, Long> getSizes()
