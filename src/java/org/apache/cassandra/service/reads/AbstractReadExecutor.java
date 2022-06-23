@@ -107,9 +107,13 @@ public abstract class AbstractReadExecutor
 
         shouldRecordPending = DatabaseDescriptor.getEndpointSnitch() instanceof EFTSnitch && KeyMap.instance.isLoaded() && command instanceof SinglePartitionReadCommand;
 
+        logger.info("Should record pending key " + shouldRecordPending);
+
         if (shouldRecordPending)
         {
             currentKey = new String(((SinglePartitionReadCommand) command).partitionKey().getKey().array(), StandardCharsets.UTF_8);
+
+            logger.info("Prepare to read key " + currentKey);
         }
         else
         {
@@ -121,6 +125,8 @@ public abstract class AbstractReadExecutor
     {
         if (shouldRecordPending && KeyMap.instance.containsKey(currentKey))
         {
+            logger.info("Adding pending key " + currentKey);
+
             currentEndpoints = endpoints;
             PendingStates.instance.addPendingKey(endpoints, currentKey);
         }
@@ -130,6 +136,8 @@ public abstract class AbstractReadExecutor
     {
         if (shouldRecordPending && currentEndpoints != null)
         {
+            logger.info("Removing pending key " + currentKey);
+
             PendingStates.instance.removePendingKey(currentEndpoints, currentKey);
             currentEndpoints = null;
         }

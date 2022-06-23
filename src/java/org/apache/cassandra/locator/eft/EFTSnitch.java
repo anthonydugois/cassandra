@@ -20,6 +20,9 @@ package org.apache.cassandra.locator.eft;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.locator.InetAddressAndPort;
 import org.apache.cassandra.locator.Replica;
 import org.apache.cassandra.locator.ReplicaCollection;
@@ -28,12 +31,16 @@ import org.apache.cassandra.utils.FBUtilities;
 
 public class EFTSnitch extends SimpleSnitch
 {
+    private static final Logger logger = LoggerFactory.getLogger(EFTSnitch.class);
+
     @Override
     public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress)
     {
         assert address.equals(FBUtilities.getBroadcastAddressAndPort());
 
         Map<InetAddressAndPort, Long> states = PendingStates.instance.getPendingCounts();
+
+        logger.info("EFT states : " + states);
 
         return unsortedAddress.sorted((r1, r2) -> compareEndpoints(address, r1, r2, states));
     }
