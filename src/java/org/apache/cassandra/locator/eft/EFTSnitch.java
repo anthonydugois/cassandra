@@ -18,6 +18,9 @@
 
 package org.apache.cassandra.locator.eft;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -33,14 +36,40 @@ public class EFTSnitch extends SimpleSnitch
 {
     private static final Logger logger = LoggerFactory.getLogger(EFTSnitch.class);
 
+    public final static String DEFAULT_TRACE_FILE = "csv/trace.csv";
+
+    public final static long DEFAULT_PERIOD = 1000;
+
+    private final File traceFile;
+
+    private BufferedWriter writer;
+
+    private long period = 0;
+
+    public EFTSnitch()
+    {
+        traceFile = new File(DEFAULT_TRACE_FILE);
+
+        try
+        {
+            writer = new BufferedWriter(new FileWriter(traceFile, true));
+        }
+        catch (Exception exception)
+        {
+            exception.printStackTrace();
+        }
+    }
+
     @Override
     public <C extends ReplicaCollection<? extends C>> C sortedByProximity(InetAddressAndPort address, C unsortedAddress)
     {
         assert address.equals(FBUtilities.getBroadcastAddressAndPort());
 
-        Map<InetAddressAndPort, Long> states = PendingStates.instance.getPendingCounts();
+        Map<InetAddressAndPort, Long> states = PendingStates.instance.getPendingCounts(unsortedAddress);
 
-        logger.info("EFT states : " + states);
+        trace(states);
+
+        // logger.info("EFT states : " + states);
 
         return unsortedAddress.sorted((r1, r2) -> compareEndpoints(address, r1, r2, states));
     }
@@ -51,5 +80,47 @@ public class EFTSnitch extends SimpleSnitch
         Long t2 = states.getOrDefault(r2.endpoint(), 0L);
 
         return t1.compareTo(t2);
+    }
+
+    private void trace(Map<InetAddressAndPort, Long> states)
+    {
+        long epoch = System.currentTimeMillis();
+
+        StringBuilder counts = new StringBuilder();
+
+        for (Map.Entry<InetAddressAndPort, Long> entry : states.entrySet())
+        {
+            InetAddressAndPort endpoint = entry.getKey();
+            long count = entry.getValue();
+
+            counts.append(',').append(endpoint).append(',').append(count);
+        }
+
+        String line = epoch + counts.toString() + '\n';
+
+        try
+        {
+            writer.append(line);
+        }
+        catch (Exception exception)
+        {
+            exception.printStackTrace();
+        }
+
+        period++;
+
+        if (period > DEFAULT_PERIOD)
+        {
+            period = 0;
+
+            try
+            {
+                writer.flush();
+            }
+            catch (Exception exception)
+            {
+                exception.printStackTrace();
+            }
+        }
     }
 }

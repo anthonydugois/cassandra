@@ -98,7 +98,7 @@ public class TaskQueueTracer
             {
                 queueFileWriter.append(line);
 
-                logger.info("Queue has been traced");
+                // logger.info("Queue has been traced");
             }
             catch (Exception exception)
             {
@@ -122,10 +122,7 @@ public class TaskQueueTracer
 
             if (count > 0)
             {
-                counts.append(',');
-                counts.append(endpoint);
-                counts.append(',');
-                counts.append(state.getPendingCount());
+                counts.append(',').append(endpoint).append(',').append(state.getPendingCount());
 
                 trace = true;
             }
@@ -139,7 +136,7 @@ public class TaskQueueTracer
             {
                 stateFileWriter.append(line);
 
-                logger.info("State has been traced");
+                // logger.info("State has been traced");
             }
             catch (Exception exception)
             {

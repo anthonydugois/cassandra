@@ -24,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.cassandra.locator.InetAddressAndPort;
+import org.apache.cassandra.locator.Replica;
+import org.apache.cassandra.locator.ReplicaCollection;
 
 public class PendingStates
 {
@@ -85,16 +87,23 @@ public class PendingStates
         state.remove(key);
     }
 
-    public Map<InetAddressAndPort, Long> getPendingCounts()
+    public <C extends ReplicaCollection<? extends C>> Map<InetAddressAndPort, Long> getPendingCounts(C replicas)
     {
         Map<InetAddressAndPort, Long> pendingCounts = new HashMap<>();
 
-        for (Map.Entry<InetAddressAndPort, PendingState> entry : states.entrySet())
+        for (Replica replica : replicas)
         {
-            InetAddressAndPort endpoint = entry.getKey();
-            PendingState state = entry.getValue();
+            InetAddressAndPort endpoint = replica.endpoint();
+            PendingState state = states.get(endpoint);
 
-            pendingCounts.put(endpoint, state.getPendingCount());
+            if (state == null)
+            {
+                pendingCounts.put(endpoint, 0L);
+            }
+            else
+            {
+                pendingCounts.put(endpoint, state.getPendingCount());
+            }
         }
 
         return pendingCounts;
