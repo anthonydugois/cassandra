@@ -16,8 +16,21 @@
  * limitations under the License.
  */
 
-package org.apache.cassandra.locator.eft;
+package org.apache.cassandra.custom.broadcast;
 
-public class UndefinedKeyException extends Exception
+import org.apache.cassandra.custom.state.ClusterState;
+import org.apache.cassandra.custom.state.EndpointState;
+import org.apache.cassandra.custom.state.StatePayload;
+import org.apache.cassandra.net.Message;
+import org.apache.cassandra.net.Verb;
+
+public class StatePayloadMessageFactory implements MessageFactory<StatePayload>
 {
+    @Override
+    public Message<StatePayload> build()
+    {
+        EndpointState state = ClusterState.instance.updateLocalState();
+
+        return Message.out(Verb.STATE_PAYLOAD_MSG, state.payload());
+    }
 }

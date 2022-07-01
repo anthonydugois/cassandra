@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.cassandra.concurrent.tracing;
+package org.apache.cassandra.custom.tracing;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.cassandra.concurrent.ScheduledExecutors;
 import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.locator.InetAddressAndPort;
-import org.apache.cassandra.locator.eft.PendingState;
-import org.apache.cassandra.locator.eft.PendingStates;
+import org.apache.cassandra.custom.snitch.LocalPendingState;
+import org.apache.cassandra.custom.snitch.LocalPendingStates;
 
 public class TaskQueueTracer
 {
@@ -111,13 +111,13 @@ public class TaskQueueTracer
     {
         boolean trace = false;
 
-        Map<InetAddressAndPort, PendingState> states = PendingStates.instance.getStates();
+        Map<InetAddressAndPort, LocalPendingState> states = LocalPendingStates.instance.getStates();
         StringBuilder counts = new StringBuilder();
 
-        for (Map.Entry<InetAddressAndPort, PendingState> entry : states.entrySet())
+        for (Map.Entry<InetAddressAndPort, LocalPendingState> entry : states.entrySet())
         {
             InetAddressAndPort endpoint = entry.getKey();
-            PendingState state = entry.getValue();
+            LocalPendingState state = entry.getValue();
             long count = state.getPendingCount();
 
             if (count > 0)

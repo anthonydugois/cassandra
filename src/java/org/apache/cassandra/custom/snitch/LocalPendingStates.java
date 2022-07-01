@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.cassandra.locator.eft;
+package org.apache.cassandra.custom.snitch;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,13 +27,13 @@ import org.apache.cassandra.locator.InetAddressAndPort;
 import org.apache.cassandra.locator.Replica;
 import org.apache.cassandra.locator.ReplicaCollection;
 
-public class PendingStates
+public class LocalPendingStates
 {
-    public final static PendingStates instance = new PendingStates();
+    public final static LocalPendingStates instance = new LocalPendingStates();
 
-    private final ConcurrentMap<InetAddressAndPort, PendingState> states = new ConcurrentHashMap<>();
+    private final ConcurrentMap<InetAddressAndPort, LocalPendingState> states = new ConcurrentHashMap<>();
 
-    public ConcurrentMap<InetAddressAndPort, PendingState> getStates()
+    public ConcurrentMap<InetAddressAndPort, LocalPendingState> getStates()
     {
         return states;
     }
@@ -54,13 +54,13 @@ public class PendingStates
         }
     }
 
-    private PendingState getState(InetAddressAndPort endpoint)
+    private LocalPendingState getState(InetAddressAndPort endpoint)
     {
-        PendingState state = states.get(endpoint);
+        LocalPendingState state = states.get(endpoint);
 
         if (state == null)
         {
-            PendingState newState = new PendingState();
+            LocalPendingState newState = new LocalPendingState();
 
             state = states.putIfAbsent(endpoint, newState);
 
@@ -75,14 +75,14 @@ public class PendingStates
 
     private void add(InetAddressAndPort endpoint, String key)
     {
-        PendingState state = getState(endpoint);
+        LocalPendingState state = getState(endpoint);
 
         state.add(key);
     }
 
     private void remove(InetAddressAndPort endpoint, String key)
     {
-        PendingState state = getState(endpoint);
+        LocalPendingState state = getState(endpoint);
 
         state.remove(key);
     }
@@ -94,7 +94,7 @@ public class PendingStates
         for (Replica replica : replicas)
         {
             InetAddressAndPort endpoint = replica.endpoint();
-            PendingState state = states.get(endpoint);
+            LocalPendingState state = states.get(endpoint);
 
             if (state == null)
             {
@@ -113,10 +113,10 @@ public class PendingStates
     {
         Map<InetAddressAndPort, Long> finishTimes = new HashMap<>();
 
-        for (Map.Entry<InetAddressAndPort, PendingState> entry : states.entrySet())
+        for (Map.Entry<InetAddressAndPort, LocalPendingState> entry : states.entrySet())
         {
             InetAddressAndPort endpoint = entry.getKey();
-            PendingState state = entry.getValue();
+            LocalPendingState state = entry.getValue();
 
             finishTimes.put(endpoint, state.getExpectedFinishTime());
         }

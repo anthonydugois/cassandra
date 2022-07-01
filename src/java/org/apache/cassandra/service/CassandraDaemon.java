@@ -51,9 +51,10 @@ import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import org.apache.cassandra.audit.AuditLogManager;
 import org.apache.cassandra.concurrent.ScheduledExecutors;
-import org.apache.cassandra.concurrent.tracing.TaskQueueTracer;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.cql3.QueryProcessor;
+import org.apache.cassandra.custom.broadcast.ScheduledBroadcast;
+import org.apache.cassandra.custom.broadcast.StatePayloadMessageFactory;
 import org.apache.cassandra.db.ColumnFamilyStore;
 import org.apache.cassandra.db.Keyspace;
 import org.apache.cassandra.db.SizeEstimatesRecorder;
@@ -72,8 +73,6 @@ import org.apache.cassandra.io.sstable.CorruptSSTableException;
 import org.apache.cassandra.io.sstable.SSTableHeaderFix;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.locator.InetAddressAndPort;
-import org.apache.cassandra.locator.eft.EFTSnitch;
-import org.apache.cassandra.locator.eft.KeyMapLoader;
 import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.metrics.DefaultNameFactory;
 import org.apache.cassandra.metrics.StorageMetrics;
@@ -780,11 +779,14 @@ public class CassandraDaemon
 
             start();
 
-            if (DatabaseDescriptor.getEndpointSnitch() instanceof EFTSnitch)
-            {
-                KeyMapLoader.instance.start();
-                TaskQueueTracer.instance.start();
-            }
+            // KeyMapLoader.instance.start();
+
+            // TaskQueueTracer.instance.start();
+
+            ScheduledBroadcast broadcast = new ScheduledBroadcast(100, 100, TimeUnit.MILLISECONDS);
+
+            broadcast.setMessageFactory(new StatePayloadMessageFactory());
+            broadcast.start();
 
             logger.info("Startup complete");
         }

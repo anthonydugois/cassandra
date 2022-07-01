@@ -16,11 +16,13 @@
  * limitations under the License.
  */
 
-package org.apache.cassandra.locator.eft;
+package org.apache.cassandra.custom.snitch;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public class PendingState
+import org.apache.cassandra.custom.keymap.KeyMap;
+
+public class LocalPendingState
 {
     private final AtomicLong pendingCount = new AtomicLong(0);
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.cassandra.locator.eft;
+package org.apache.cassandra.custom.snitch;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -32,9 +32,9 @@ import org.apache.cassandra.locator.ReplicaCollection;
 import org.apache.cassandra.locator.SimpleSnitch;
 import org.apache.cassandra.utils.FBUtilities;
 
-public class EFTSnitch extends SimpleSnitch
+public class LocalEFTSnitch extends SimpleSnitch
 {
-    private static final Logger logger = LoggerFactory.getLogger(EFTSnitch.class);
+    private static final Logger logger = LoggerFactory.getLogger(LocalEFTSnitch.class);
 
     public final static String DEFAULT_TRACE_FILE = "csv/trace.csv";
 
@@ -46,7 +46,7 @@ public class EFTSnitch extends SimpleSnitch
 
     private long period = 0;
 
-    public EFTSnitch()
+    public LocalEFTSnitch()
     {
         traceFile = new File(DEFAULT_TRACE_FILE);
 
@@ -65,11 +65,11 @@ public class EFTSnitch extends SimpleSnitch
     {
         assert address.equals(FBUtilities.getBroadcastAddressAndPort());
 
-        Map<InetAddressAndPort, Long> states = PendingStates.instance.getPendingCounts(unsortedAddress);
+        Map<InetAddressAndPort, Long> states = LocalPendingStates.instance.getPendingCounts(unsortedAddress);
 
         trace(states);
 
-        // logger.info("EFT states : " + states);
+        logger.info("EFT states : " + states);
 
         return unsortedAddress.sorted((r1, r2) -> compareEndpoints(address, r1, r2, states));
     }

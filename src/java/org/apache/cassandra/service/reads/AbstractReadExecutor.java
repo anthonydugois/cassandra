@@ -42,9 +42,9 @@ import org.apache.cassandra.locator.Replica;
 import org.apache.cassandra.locator.ReplicaCollection;
 import org.apache.cassandra.locator.ReplicaPlan;
 import org.apache.cassandra.locator.ReplicaPlans;
-import org.apache.cassandra.locator.eft.EFTSnitch;
-import org.apache.cassandra.locator.eft.KeyMap;
-import org.apache.cassandra.locator.eft.PendingStates;
+import org.apache.cassandra.custom.snitch.LocalEFTSnitch;
+import org.apache.cassandra.custom.keymap.KeyMap;
+import org.apache.cassandra.custom.snitch.LocalPendingStates;
 import org.apache.cassandra.net.Message;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.service.StorageProxy.LocalReadRunnable;
@@ -105,15 +105,13 @@ public abstract class AbstractReadExecutor
             digestVersion = Math.min(digestVersion, MessagingService.instance().versions.get(replica.endpoint()));
         command.setDigestVersion(digestVersion);
 
-        shouldRecordPending = DatabaseDescriptor.getEndpointSnitch() instanceof EFTSnitch && KeyMap.instance.isLoaded() && command instanceof SinglePartitionReadCommand;
-
-        // logger.info("Should record pending key " + shouldRecordPending);
+        shouldRecordPending = DatabaseDescriptor.getEndpointSnitch() instanceof LocalEFTSnitch && command instanceof SinglePartitionReadCommand;
 
         if (shouldRecordPending)
         {
             currentKey = new String(((SinglePartitionReadCommand) command).partitionKey().getKey().array(), StandardCharsets.UTF_8);
 
-            // logger.info("Prepare to read key " + currentKey);
+            logger.info("Prepare to read key " + currentKey);
         }
         else
         {
@@ -125,10 +123,10 @@ public abstract class AbstractReadExecutor
     {
         if (shouldRecordPending && KeyMap.instance.containsKey(currentKey))
         {
-            // logger.info("Adding pending key " + currentKey);
+            logger.info("Adding pending key " + currentKey);
 
             currentEndpoints = endpoints;
-            PendingStates.instance.addPendingKey(endpoints, currentKey);
+            LocalPendingStates.instance.addPendingKey(endpoints, currentKey);
         }
     }
 
@@ -136,9 +134,9 @@ public abstract class AbstractReadExecutor
     {
         if (shouldRecordPending && currentEndpoints != null)
         {
-            // logger.info("Removing pending key " + currentKey);
+            logger.info("Removing pending key " + currentKey);
 
-            PendingStates.instance.removePendingKey(currentEndpoints, currentKey);
+            LocalPendingStates.instance.removePendingKey(currentEndpoints, currentKey);
             currentEndpoints = null;
         }
     }

@@ -39,7 +39,7 @@ import org.apache.cassandra.db.ConsistencyLevel;
 
 /**
  * A class that contains configuration properties for the cassandra node it runs within.
- *
+ * <p>
  * Properties declared as volatile can be mutated via JMX.
  */
 public class Config
@@ -86,9 +86,13 @@ public class Config
     /* initial token in the ring */
     public String initial_token;
     public Integer num_tokens;
-    /** Triggers automatic allocation of tokens if set, using the replication strategy of the referenced keyspace */
+    /**
+     * Triggers automatic allocation of tokens if set, using the replication strategy of the referenced keyspace
+     */
     public String allocate_tokens_for_keyspace = null;
-    /** Triggers automatic allocation of tokens if set, based on the provided replica count for a datacenter */
+    /**
+     * Triggers automatic allocation of tokens if set, based on the provided replica count for a datacenter
+     */
     public Integer allocate_tokens_for_local_replication_factor = null;
 
     public long native_transport_idle_timeout_in_ms = 0L;
@@ -276,6 +280,8 @@ public class Config
     public int commitlog_periodic_queue_size = -1;
 
     public String endpoint_snitch;
+    public String selection_snitch;
+
     public boolean dynamic_snitch = true;
     public int dynamic_snitch_update_interval_in_ms = 100;
     public int dynamic_snitch_reset_interval_in_ms = 600000;
@@ -410,7 +416,7 @@ public class Config
      * "tell" a user that there's something really wrong with the UDF.
      * When you disable async UDF execution, users MUST pay attention to read-timeouts since these may indicate
      * UDFs that run too long or forever - and this can destabilize the cluster.
-     *
+     * <p>
      * This requires allow_insecure_udfs to be true
      */
     public boolean enable_user_defined_functions_threads = true;
@@ -462,15 +468,15 @@ public class Config
      * Due to this, by default, Casssandra will prime these internode TCP connections and wait for all but a single
      * node to be DOWN/disconnected in the local datacenter before offering itself as a coordinator, subject to a
      * timeout. See CASSANDRA-13993 and CASSANDRA-14297 for more details.
-     *
+     * <p>
      * We provide two tunables to control this behavior as some users may want to block until all datacenters are
      * available (global QUORUM/EACH_QUORUM), some users may not want to block at all (clients that already work
      * around the problem), and some users may want to prime the connections but not delay startup.
-     *
+     * <p>
      * block_for_peers_timeout_in_secs: controls how long this node will wait to connect to peers. To completely disable
      * any startup connectivity checks set this to -1. To trigger the internode connections but immediately continue
      * startup, set this to to 0. The default is 10 seconds.
-     *
+     * <p>
      * block_for_peers_in_remote_dcs: controls if this node will consider remote datacenters to wait for. The default
      * is to _not_ wait on remote datacenters.
      */
@@ -545,7 +551,7 @@ public class Config
      * replica involved in the query, for compaction the snapshot will be created locally.
      * These are limited at the replica level so that only a single snapshot per-day can be taken
      * via this method.
-     *
+     * <p>
      * This requires check_for_duplicate_rows_during_reads and/or check_for_duplicate_rows_during_compaction
      * below to be enabled
      */
@@ -669,7 +675,8 @@ public class Config
         exception
     }
 
-    private static final List<String> SENSITIVE_KEYS = new ArrayList<String>() {{
+    private static final List<String> SENSITIVE_KEYS = new ArrayList<String>()
+    {{
         add("client_encryption_options");
         add("server_encryption_options");
     }};

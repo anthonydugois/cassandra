@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.cassandra.locator.eft;
+package org.apache.cassandra.custom.keymap;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,7 +31,15 @@ public final class KeyMap
 
     private final Map<String, Long> sizes = new HashMap<>();
 
-    private boolean isLoaded = false;
+    public Map<String, Long> getSizes()
+    {
+        return sizes;
+    }
+
+    public boolean containsKey(String key)
+    {
+        return sizes.containsKey(key);
+    }
 
     public void putInMemory(File file) throws IOException
     {
@@ -48,25 +56,5 @@ public final class KeyMap
                 sizes.put(key, size);
             }
         }
-    }
-
-    public boolean isLoaded()
-    {
-        return isLoaded;
-    }
-
-    public void setLoaded(boolean loaded)
-    {
-        isLoaded = loaded;
-    }
-
-    public Map<String, Long> getSizes()
-    {
-        return sizes;
-    }
-
-    public boolean containsKey(String key)
-    {
-        return sizes.containsKey(key);
     }
 }
