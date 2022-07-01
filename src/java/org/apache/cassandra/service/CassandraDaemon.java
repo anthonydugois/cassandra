@@ -783,7 +783,7 @@ public class CassandraDaemon
 
             // TaskQueueTracer.instance.start();
 
-            ScheduledBroadcast broadcast = new ScheduledBroadcast(100, 100, TimeUnit.MILLISECONDS);
+            ScheduledBroadcast broadcast = new ScheduledBroadcast(10, 10, TimeUnit.MILLISECONDS);
 
             broadcast.setMessageFactory(new StatePayloadMessageFactory());
             broadcast.start();

@@ -26,7 +26,7 @@ import org.apache.cassandra.io.util.DataOutputPlus;
 
 public class StatePayload
 {
-    private int pendingReadCount;
+    private int pendingReadCount = 0;
 
     public int getPendingReadCount()
     {
@@ -36,6 +36,11 @@ public class StatePayload
     public void setPendingReadCount(int pendingReadCount)
     {
         this.pendingReadCount = pendingReadCount;
+    }
+
+    public boolean shouldSend()
+    {
+        return pendingReadCount > 0;
     }
 
     public static final IVersionedSerializer<StatePayload> serializer = new IVersionedSerializer<>()

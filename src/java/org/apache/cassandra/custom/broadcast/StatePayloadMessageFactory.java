@@ -18,6 +18,8 @@
 
 package org.apache.cassandra.custom.broadcast;
 
+import javax.annotation.Nullable;
+
 import org.apache.cassandra.custom.state.ClusterState;
 import org.apache.cassandra.custom.state.EndpointState;
 import org.apache.cassandra.custom.state.StatePayload;
@@ -27,10 +29,17 @@ import org.apache.cassandra.net.Verb;
 public class StatePayloadMessageFactory implements MessageFactory<StatePayload>
 {
     @Override
+    @Nullable
     public Message<StatePayload> build()
     {
         EndpointState state = ClusterState.instance.updateLocalState();
+        StatePayload payload = state.payload();
 
-        return Message.out(Verb.STATE_PAYLOAD_MSG, state.payload());
+        if (payload.shouldSend())
+        {
+            return Message.out(Verb.STATE_PAYLOAD_MSG, state.payload());
+        }
+
+        return null;
     }
 }

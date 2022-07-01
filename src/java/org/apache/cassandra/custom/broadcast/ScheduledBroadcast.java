@@ -57,16 +57,19 @@ public class ScheduledBroadcast extends ScheduledRunnable
     {
         Message<?> message = messageFactory.build();
 
-        InetAddressAndPort local = FBUtilities.getBroadcastAddressAndPort();
-        Set<InetAddressAndPort> endpoints = Gossiper.instance.getLiveMembers();
-
-        for (InetAddressAndPort endpoint : endpoints)
+        if (message != null)
         {
-            if (endpoint != local)
-            {
-                MessagingService.instance().send(message, endpoint);
+            InetAddressAndPort local = FBUtilities.getBroadcastAddressAndPort();
+            Set<InetAddressAndPort> endpoints = Gossiper.instance.getLiveMembers();
 
-                // logger.info("Sending " + message + " to " + endpoint);
+            for (InetAddressAndPort endpoint : endpoints)
+            {
+                if (endpoint != local)
+                {
+                    MessagingService.instance().send(message, endpoint);
+
+                    // logger.info("Sending " + message + " to " + endpoint);
+                }
             }
         }
     }

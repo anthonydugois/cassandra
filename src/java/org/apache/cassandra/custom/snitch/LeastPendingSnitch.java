@@ -75,6 +75,19 @@ public class LeastPendingSnitch extends SelectionSnitch
     {
         Map<Replica, Long> scores = getScores(unsortedAddress);
 
+        long epoch = System.currentTimeMillis();
+
+        StringBuilder builder = new StringBuilder();
+
+        for (Map.Entry<Replica, Long> entry : scores.entrySet())
+        {
+            builder.append(',').append(entry.getKey().endpoint()).append(',').append(entry.getValue());
+        }
+
+        String line = epoch + builder.toString() + '\n';
+
+        trace(line);
+
         // logger.info("Sorting " + unsortedAddress + " with scores " + scores);
 
         return unsortedAddress.sorted((r1, r2) -> compareEndpoints(address, r1, r2, scores));

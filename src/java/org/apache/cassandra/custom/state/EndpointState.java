@@ -20,7 +20,7 @@ package org.apache.cassandra.custom.state;
 
 public class EndpointState
 {
-    private int pendingReadCount;
+    private int pendingReadCount = 0;
 
     public int getPendingReadCount()
     {
