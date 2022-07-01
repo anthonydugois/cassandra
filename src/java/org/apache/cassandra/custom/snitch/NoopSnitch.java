@@ -29,7 +29,7 @@ public class NoopSnitch extends SelectionSnitch
 {
     private static final Logger logger = LoggerFactory.getLogger(NoopSnitch.class);
 
-    protected NoopSnitch(IEndpointSnitch subsnitch)
+    public NoopSnitch(IEndpointSnitch subsnitch)
     {
         super(subsnitch);
 
