@@ -107,8 +107,8 @@ public class LeastPendingSnitch extends SelectionSnitch
 
     public int compareEndpoints(InetAddressAndPort target, Replica r1, Replica r2, Map<Replica, Long> states)
     {
-        Long score1 = states.get(r1);
-        Long score2 = states.get(r2);
+        Long score1 = states.getOrDefault(r1, 0L);
+        Long score2 = states.getOrDefault(r2, 0L);
 
         if (score1.equals(score2))
         {

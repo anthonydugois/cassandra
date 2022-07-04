@@ -1077,15 +1077,15 @@ selection_snitch:
     parameters:
       - trace: false
 
-read_queue:
-  - class_name:
-    parameters:
-      -
-
-key_oracle:
-  - class_name:
-    parameters:
-      -
+#read_queue:
+#  - class_name:
+#    parameters:
+#      -
+#
+#key_oracle:
+#  - class_name:
+#    parameters:
+#      -
 
 dynamic_snitch: true
 # controls how often to perform the more expensive part of host score

@@ -81,13 +81,14 @@ if [ "$1" = 'cassandra' ]; then
 	_sed-in-place "$CASSANDRA_CONF/cassandra.yaml" \
 		-r 's/(- seeds:).*/\1 "'"$CASSANDRA_SEEDS"'"/'
 
+	_sed-in-place "$CASSANDRA_CONF/cassandra.yaml" \
+		-r 's/(selection_snitch:\n  - class_name:).*/\1 '"$CASSANDRA_SELECTION_SNITCH"'/'
+
 	for yaml in \
 		broadcast_address \
 		broadcast_rpc_address \
 		cluster_name \
 		endpoint_snitch \
-		selection_snitch \
-		dynamic_snitch \
 		listen_address \
 		num_tokens \
 		rpc_address \
