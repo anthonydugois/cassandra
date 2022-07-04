@@ -1121,13 +1121,41 @@ public class DatabaseDescriptor
     // definitely not safe for tools + clients - implicitly instantiates StorageService
     public static void applySnitch()
     {
-        /* end point snitch */
         if (conf.endpoint_snitch == null)
         {
             throw new ConfigurationException("Missing endpoint_snitch directive", false);
         }
-        // snitch = createEndpointSnitch(conf.dynamic_snitch, conf.endpoint_snitch);
-        snitch = createSnitch(conf.endpoint_snitch, conf.selection_snitch);
+
+        if (conf.selection_snitch == null)
+        {
+            throw new ConfigurationException("Missing selection_snitch directive", false);
+        }
+
+        IEndpointSnitch endpointSnitch;
+
+        try
+        {
+            Class<?> endpointClass = Class.forName(conf.endpoint_snitch);
+
+            endpointSnitch = (IEndpointSnitch) endpointClass.getConstructor().newInstance();
+        }
+        catch (Exception exception)
+        {
+            throw new ConfigurationException("Unable to instantiate endpoint snitch");
+        }
+
+        try
+        {
+            Class<?> selectionClass = Class.forName(conf.selection_snitch.class_name);
+
+            snitch = (IEndpointSnitch) selectionClass.getConstructor(IEndpointSnitch.class, Map.class)
+                                                     .newInstance(endpointSnitch, conf.selection_snitch.parameters);
+        }
+        catch (Exception exception)
+        {
+            throw new ConfigurationException("Unable to instantiate selection snitch");
+        }
+
         EndpointSnitchInfo.create();
 
         localDC = snitch.getLocalDatacenter();
@@ -1230,24 +1258,6 @@ public class DatabaseDescriptor
             snitchClassName = "org.apache.cassandra.locator." + snitchClassName;
         IEndpointSnitch snitch = FBUtilities.construct(snitchClassName, "snitch");
         return dynamic ? new DynamicEndpointSnitch(snitch) : snitch;
-    }
-
-    public static IEndpointSnitch createSnitch(String endpointSnitch, String selectionSnitch) throws ConfigurationException
-    {
-        Class<IEndpointSnitch> endpointSnitchClass = FBUtilities.classForName(endpointSnitch, "endpoint_snitch");
-        Class<IEndpointSnitch> selectionSnitchClass = FBUtilities.classForName(selectionSnitch, "selection_snitch");
-
-        try
-        {
-            IEndpointSnitch endpointSnitchInstance = endpointSnitchClass.getConstructor().newInstance();
-            IEndpointSnitch selectionSnitchInstance = selectionSnitchClass.getConstructor(IEndpointSnitch.class).newInstance(endpointSnitchInstance);
-
-            return selectionSnitchInstance;
-        }
-        catch (Exception exception)
-        {
-            throw new ConfigurationException("Unable to instantiate snitch");
-        }
     }
 
     public static IAuthenticator getAuthenticator()

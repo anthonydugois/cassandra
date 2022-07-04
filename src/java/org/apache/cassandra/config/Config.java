@@ -280,7 +280,8 @@ public class Config
     public int commitlog_periodic_queue_size = -1;
 
     public String endpoint_snitch;
-    public String selection_snitch;
+
+    public ParameterizedClass selection_snitch;
 
     public boolean dynamic_snitch = true;
     public int dynamic_snitch_update_interval_in_ms = 100;

@@ -18,6 +18,8 @@
 
 package org.apache.cassandra.custom.snitch;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +31,9 @@ public class NoopSnitch extends SelectionSnitch
 {
     private static final Logger logger = LoggerFactory.getLogger(NoopSnitch.class);
 
-    public NoopSnitch(IEndpointSnitch subsnitch)
+    public NoopSnitch(IEndpointSnitch subsnitch, Map<String, String> parameters)
     {
-        super(subsnitch);
+        super(subsnitch, parameters);
 
         logger.info("Using " + this.getClass().getName() + " on top of " + subsnitch.getClass().getName());
     }

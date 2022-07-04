@@ -18,6 +18,7 @@
 
 package org.apache.cassandra.custom.snitch;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,9 +37,9 @@ public class LeastPendingSnitch extends SelectionSnitch
 {
     private static final Logger logger = LoggerFactory.getLogger(LeastPendingSnitch.class);
 
-    public LeastPendingSnitch(IEndpointSnitch subsnitch)
+    public LeastPendingSnitch(IEndpointSnitch subsnitch, Map<String, String> parameters)
     {
-        super(subsnitch);
+        super(subsnitch, parameters);
 
         logger.info("Using " + this.getClass().getName() + " on top of " + subsnitch.getClass().getName());
     }
@@ -86,9 +87,14 @@ public class LeastPendingSnitch extends SelectionSnitch
 
         String line = epoch + builder.toString() + '\n';
 
-        trace(line);
-
-        // logger.info("Sorting " + unsortedAddress + " with scores " + scores);
+        try
+        {
+            trace(line);
+        }
+        catch (IOException exception)
+        {
+            exception.printStackTrace();
+        }
 
         return unsortedAddress.sorted((r1, r2) -> compareEndpoints(address, r1, r2, scores));
     }

@@ -21,7 +21,9 @@ package org.apache.cassandra.custom.snitch;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Writer;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.cassandra.locator.AbstractEndpointSnitch;
@@ -30,22 +32,34 @@ import org.apache.cassandra.locator.InetAddressAndPort;
 
 public abstract class SelectionSnitch extends AbstractEndpointSnitch
 {
+    public static final String TRACE_PROPERTY = "trace";
+    public static final String DEFAULT_TRACE_PROPERTY = "false";
+
+    public static final String TRACE_FILE_PROPERTY = "trace_file";
+    public static final String DEFAULT_TRACE_FILE_PROPERTY = "/csv/trace.csv";
+
     public final IEndpointSnitch subsnitch;
 
-    private final File trace;
+    private final Map<String, String> parameters;
 
-    private Writer writer;
+    private final boolean trace;
+
+    private final File traceFile;
+    private Writer traceWriter;
 
     private final AtomicInteger flushPeriod = new AtomicInteger(0);
 
-    protected SelectionSnitch(IEndpointSnitch subsnitch)
+    protected SelectionSnitch(IEndpointSnitch subsnitch, Map<String, String> parameters)
     {
         this.subsnitch = subsnitch;
-        this.trace = new File("/csv/trace.csv");
+        this.parameters = parameters;
+
+        this.trace = Boolean.parseBoolean(parameters.getOrDefault(TRACE_PROPERTY, DEFAULT_TRACE_PROPERTY));
+        this.traceFile = new File(parameters.getOrDefault(TRACE_FILE_PROPERTY, DEFAULT_TRACE_FILE_PROPERTY));
 
         try
         {
-            this.writer = new BufferedWriter(new FileWriter(trace, true));
+            this.traceWriter = new BufferedWriter(new FileWriter(traceFile, true));
         }
         catch (Exception exception)
         {
@@ -58,35 +72,45 @@ public abstract class SelectionSnitch extends AbstractEndpointSnitch
         return subsnitch;
     }
 
-    public void trace(String line)
+    public Map<String, String> getParameters()
+    {
+        return parameters;
+    }
+
+    public File getTraceFile()
+    {
+        return traceFile;
+    }
+
+    public Writer getTraceWriter()
+    {
+        return traceWriter;
+    }
+
+    public void trace(String line) throws IOException
     {
         trace(line, 1000);
     }
 
-    public void trace(String line, int period)
+    public void trace(String line, int period) throws IOException
     {
-        try
+        if (!trace)
         {
-            writer.append(line);
+            return;
         }
-        catch (Exception exception)
-        {
-            exception.printStackTrace();
-        }
+
+        traceWriter.append(line);
 
         if (flushPeriod.incrementAndGet() > period)
         {
             flushPeriod.set(0);
-
-            try
-            {
-                writer.flush();
-            }
-            catch (Exception exception)
-            {
-                exception.printStackTrace();
-            }
+            traceWriter.flush();
         }
+    }
+
+    public void flushTrace() throws IOException
+    {
+        traceWriter.flush();
     }
 
     @Override

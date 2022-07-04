@@ -1072,7 +1072,20 @@ slow_query_log_timeout_in_ms: 500
 # of the snitch, which will be assumed to be on your classpath.
 endpoint_snitch: org.apache.cassandra.locator.SimpleSnitch
 
-selection_snitch: org.apache.cassandra.custom.snitch.NoopSnitch
+selection_snitch:
+  - class_name: org.apache.cassandra.custom.snitch.NoopSnitch
+    parameters:
+      - trace: false
+
+read_queue:
+  - class_name:
+    parameters:
+      -
+
+key_oracle:
+  - class_name:
+    parameters:
+      -
 
 dynamic_snitch: true
 # controls how often to perform the more expensive part of host score
