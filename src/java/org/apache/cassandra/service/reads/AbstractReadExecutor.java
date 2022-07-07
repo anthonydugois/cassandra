@@ -17,14 +17,11 @@
  */
 package org.apache.cassandra.service.reads;
 
-import java.nio.charset.StandardCharsets;
-
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.concurrent.Stage;
-import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.ColumnFamilyStore;
 import org.apache.cassandra.db.ConsistencyLevel;
 import org.apache.cassandra.db.DecoratedKey;
@@ -42,11 +39,9 @@ import org.apache.cassandra.locator.Replica;
 import org.apache.cassandra.locator.ReplicaCollection;
 import org.apache.cassandra.locator.ReplicaPlan;
 import org.apache.cassandra.locator.ReplicaPlans;
-import org.apache.cassandra.custom.snitch.LocalEFTSnitch;
-import org.apache.cassandra.custom.keymap.KeyMap;
-import org.apache.cassandra.custom.snitch.LocalPendingStates;
 import org.apache.cassandra.net.Message;
 import org.apache.cassandra.net.MessagingService;
+import org.apache.cassandra.replica.state.PendingRequest;
 import org.apache.cassandra.service.StorageProxy.LocalReadRunnable;
 import org.apache.cassandra.service.reads.repair.ReadRepair;
 import org.apache.cassandra.tracing.TraceState;
@@ -78,9 +73,7 @@ public abstract class AbstractReadExecutor
     private final int initialDataRequestCount;
     protected volatile PartitionIterator result = null;
 
-    private final boolean shouldRecordPending;
-    private final String currentKey;
-    private Iterable<InetAddressAndPort> currentEndpoints = null;
+    private final PendingRequest pendingRequest;
 
     AbstractReadExecutor(ColumnFamilyStore cfs, ReadCommand command, ReplicaPlan.ForTokenRead replicaPlan, int initialDataRequestCount, long queryStartNanoTime)
     {
@@ -105,40 +98,9 @@ public abstract class AbstractReadExecutor
             digestVersion = Math.min(digestVersion, MessagingService.instance().versions.get(replica.endpoint()));
         command.setDigestVersion(digestVersion);
 
-        shouldRecordPending = DatabaseDescriptor.getEndpointSnitch() instanceof LocalEFTSnitch && command instanceof SinglePartitionReadCommand;
-
-        if (shouldRecordPending)
-        {
-            currentKey = new String(((SinglePartitionReadCommand) command).partitionKey().getKey().array(), StandardCharsets.UTF_8);
-
-            logger.info("Prepare to read key " + currentKey);
-        }
-        else
-        {
-            currentKey = "";
-        }
-    }
-
-    private void addPending(Iterable<InetAddressAndPort> endpoints)
-    {
-        if (shouldRecordPending && KeyMap.instance.containsKey(currentKey))
-        {
-            logger.info("Adding pending key " + currentKey);
-
-            currentEndpoints = endpoints;
-            LocalPendingStates.instance.addPendingKey(endpoints, currentKey);
-        }
-    }
-
-    private void removePending()
-    {
-        if (shouldRecordPending && currentEndpoints != null)
-        {
-            logger.info("Removing pending key " + currentKey);
-
-            LocalPendingStates.instance.removePendingKey(currentEndpoints, currentKey);
-            currentEndpoints = null;
-        }
+        pendingRequest = command instanceof SinglePartitionReadCommand ?
+                         new PendingRequest((SinglePartitionReadCommand) command) :
+                         null;
     }
 
     public DecoratedKey getKey()
@@ -223,7 +185,10 @@ public abstract class AbstractReadExecutor
         EndpointsForToken selected = replicaPlan().contacts();
         EndpointsForToken fullDataRequests = selected.filter(Replica::isFull, initialDataRequestCount);
 
-        addPending(fullDataRequests.endpoints());
+        if (pendingRequest != null)
+        {
+            pendingRequest.send(fullDataRequests);
+        }
 
         makeFullDataRequests(fullDataRequests);
         makeTransientDataRequests(selected.filterLazily(Replica::isTransient));
@@ -437,7 +402,10 @@ public abstract class AbstractReadExecutor
             }
         }
 
-        removePending();
+        if (pendingRequest != null)
+        {
+            pendingRequest.receive();
+        }
 
         Tracing.customTrace("RECV_RESPONSE");
 

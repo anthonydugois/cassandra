@@ -24,6 +24,7 @@ import java.lang.management.MemoryPoolMXBean;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,8 +54,6 @@ import org.apache.cassandra.audit.AuditLogManager;
 import org.apache.cassandra.concurrent.ScheduledExecutors;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.cql3.QueryProcessor;
-import org.apache.cassandra.custom.broadcast.ScheduledBroadcast;
-import org.apache.cassandra.custom.broadcast.StatePayloadMessageFactory;
 import org.apache.cassandra.db.ColumnFamilyStore;
 import org.apache.cassandra.db.Keyspace;
 import org.apache.cassandra.db.SizeEstimatesRecorder;
@@ -77,6 +76,9 @@ import org.apache.cassandra.metrics.CassandraMetricsRegistry;
 import org.apache.cassandra.metrics.DefaultNameFactory;
 import org.apache.cassandra.metrics.StorageMetrics;
 import org.apache.cassandra.net.StartupClusterConnectivityChecker;
+import org.apache.cassandra.replica.broadcast.BroadcastPayloadMessageFactory;
+import org.apache.cassandra.replica.broadcast.ScheduledBroadcast;
+import org.apache.cassandra.replica.oracle.Keymap;
 import org.apache.cassandra.schema.Schema;
 import org.apache.cassandra.schema.SchemaConstants;
 import org.apache.cassandra.schema.TableMetadata;
@@ -779,13 +781,24 @@ public class CassandraDaemon
 
             start();
 
-            // KeyMapLoader.instance.start();
+            Keymap.Loader loader = new Keymap.Loader(0, 60, TimeUnit.SECONDS);
 
-            // TaskQueueTracer.instance.start();
+            loader.setPathSupplier(() -> {
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get("/csv"), "keymap*.csv"))
+                {
+                    return stream;
+                }
+                catch (IOException exception)
+                {
+                    return null;
+                }
+            });
+
+            loader.start();
 
             ScheduledBroadcast broadcast = new ScheduledBroadcast(10, 10, TimeUnit.MILLISECONDS);
 
-            broadcast.setMessageFactory(new StatePayloadMessageFactory());
+            broadcast.setMessageFactory(new BroadcastPayloadMessageFactory());
             broadcast.start();
 
             logger.info("Startup complete");

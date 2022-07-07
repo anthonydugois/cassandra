@@ -281,7 +281,7 @@ public class Config
 
     public String endpoint_snitch;
 
-    public ParameterizedClass selection_snitch;
+    public ParameterizedClass selection_strategy;
 
     public boolean dynamic_snitch = true;
     public int dynamic_snitch_update_interval_in_ms = 100;

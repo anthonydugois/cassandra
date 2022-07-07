@@ -75,19 +75,23 @@ public class Message<T>
     public final Header header;
     public final T payload;
 
-    private Message(Header header, T payload)
+    protected Message(Header header, T payload)
     {
         this.header = header;
         this.payload = payload;
     }
 
-    /** Sender of the message. */
+    /**
+     * Sender of the message.
+     */
     public InetAddressAndPort from()
     {
         return header.from;
     }
 
-    /** Whether the message has crossed the node boundary, that is whether it originated from another node. */
+    /**
+     * Whether the message has crossed the node boundary, that is whether it originated from another node.
+     */
     public boolean isCrossNode()
     {
         return !from().equals(FBUtilities.getBroadcastAddressAndPort());
@@ -126,7 +130,9 @@ public class Message<T>
         return header.expiresAtNanos;
     }
 
-    /** For how long the message has lived. */
+    /**
+     * For how long the message has lived.
+     */
     public long elapsedSinceCreated(TimeUnit units)
     {
         return units.convert(approxTime.now() - createdAtNanos(), NANOSECONDS);
@@ -137,26 +143,34 @@ public class Message<T>
         return approxTime.translate().toMillisSinceEpoch(createdAtNanos());
     }
 
-    /** Whether a failure response should be returned upon failure */
+    /**
+     * Whether a failure response should be returned upon failure
+     */
     boolean callBackOnFailure()
     {
         return header.callBackOnFailure();
     }
 
-    /** See CASSANDRA-14145 */
+    /**
+     * See CASSANDRA-14145
+     */
     public boolean trackRepairedData()
     {
         return header.trackRepairedData();
     }
 
-    /** Used for cross-DC write optimisation - pick one node in the DC and have it relay the write to its local peers */
+    /**
+     * Used for cross-DC write optimisation - pick one node in the DC and have it relay the write to its local peers
+     */
     @Nullable
     public ForwardingInfo forwardTo()
     {
         return header.forwardTo();
     }
 
-    /** The originator of the request - used when forwarding and will differ from {@link #from()} */
+    /**
+     * The originator of the request - used when forwarding and will differ from {@link #from()}
+     */
     @Nullable
     public InetAddressAndPort respondTo()
     {
@@ -182,7 +196,7 @@ public class Message<T>
     /**
      * Make a request {@link Message} with supplied verb and payload. Will fill in remaining fields
      * automatically.
-     *
+     * <p>
      * If you know that you will need to set some params or flags - prefer using variants of {@code out()}
      * that allow providing them at point of message constructions, rather than allocating new messages
      * with those added flags and params. See {@code outWithFlag()}, {@code outWithFlags()}, and {@code outWithParam()}
@@ -241,19 +255,25 @@ public class Message<T>
         return outWithParam(0, verb, payload, null, null);
     }
 
-    /** Builds a response Message with provided payload, and all the right fields inferred from request Message */
+    /**
+     * Builds a response Message with provided payload, and all the right fields inferred from request Message
+     */
     public <T> Message<T> responseWith(T payload)
     {
         return outWithParam(id(), verb().responseVerb, expiresAtNanos(), payload, null, null);
     }
 
-    /** Builds a response Message with no payload, and all the right fields inferred from request Message */
+    /**
+     * Builds a response Message with no payload, and all the right fields inferred from request Message
+     */
     public Message<NoPayload> emptyResponse()
     {
         return responseWith(NoPayload.noPayload);
     }
 
-    /** Builds a failure response Message with an explicit reason, and fields inferred from request Message */
+    /**
+     * Builds a failure response Message with an explicit reason, and fields inferred from request Message
+     */
     public Message<RequestFailureReason> failureResponse(RequestFailureReason reason)
     {
         return failureResponse(id(), expiresAtNanos(), reason);
@@ -331,7 +351,9 @@ public class Message<T>
         return id() != NO_ID;
     }
 
-    /** we preface every message with this number so the recipient can validate the sender is sane */
+    /**
+     * we preface every message with this number so the recipient can validate the sender is sane
+     */
     static final int PROTOCOL_MAGIC = 0xCA552DFA;
 
     static void validateLegacyProtocolMagic(int magic) throws InvalidLegacyProtocolMagic
@@ -343,6 +365,7 @@ public class Message<T>
     public static final class InvalidLegacyProtocolMagic extends IOException
     {
         public final int read;
+
         private InvalidLegacyProtocolMagic(int read)
         {
             super(String.format("Read %d, Expected %d", read, PROTOCOL_MAGIC));
@@ -565,11 +588,11 @@ public class Message<T>
     /**
      * Each message contains a header with several fixed fields, an optional key-value params section, and then
      * the message payload itself. Below is a visualization of the layout.
-     *
-     *  The params are prefixed by the count of key-value pairs; this value is encoded as unsigned vint.
-     *  An individual param has an unsvint id (more specifically, a {@link ParamType}), and a byte array value.
-     *  The param value is prefixed with it's length, encoded as an unsigned vint, followed by by the value's bytes.
-     *
+     * <p>
+     * The params are prefixed by the count of key-value pairs; this value is encoded as unsigned vint.
+     * An individual param has an unsvint id (more specifically, a {@link ParamType}), and a byte array value.
+     * The param value is prefixed with it's length, encoded as an unsigned vint, followed by by the value's bytes.
+     * <p>
      * Legacy Notes (see {@link Serializer#serialize(Message, DataOutputPlus, int)} for complete details):
      * - pre 4.0, the IP address was sent along in the header, before the verb. The IP address may be either IPv4 (4 bytes) or IPv6 (16 bytes)
      * - pre-4.0, the verb was encoded as a 4-byte integer; in 4.0 and up it is an unsigned vint
@@ -634,7 +657,7 @@ public class Message<T>
 
         /**
          * A partial variant of deserialize, taking in a previously deserialized {@link Header} as an argument.
-         *
+         * <p>
          * Skip deserializing the {@link Header} from the input stream in favour of using the provided header.
          */
         public <T> Message<T> deserialize(DataInputPlus in, Header header, int version) throws IOException
@@ -660,17 +683,17 @@ public class Message<T>
 
         /**
          * Partially deserialize the message - by only extracting the header and leaving the payload alone.
-         *
+         * <p>
          * To get the rest of the message without repeating the work done here, use {@link #deserialize(DataInputPlus, Header, int)}
          * method.
-         *
+         * <p>
          * It's assumed that the provided buffer contains all the bytes necessary to deserialize the header fully.
          */
         Header extractHeader(ByteBuffer buf, InetAddressAndPort from, long currentTimeNanos, int version) throws IOException
         {
             return version >= VERSION_40
-                 ? extractHeaderPost40(buf, from, currentTimeNanos, version)
-                 : extractHeaderPre40(buf, currentTimeNanos, version);
+                   ? extractHeaderPost40(buf, from, currentTimeNanos, version)
+                   : extractHeaderPre40(buf, currentTimeNanos, version);
         }
 
         private static long getExpiresAtNanos(long createdAtNanos, long currentTimeNanos, long expirationPeriodNanos)
@@ -953,8 +976,8 @@ public class Message<T>
             Message<T> message = new Message<>(header, payload);
 
             return header.params.containsKey(ParamType.FAILURE_RESPONSE)
-                 ? (Message<T>) toPost40FailureResponse(message)
-                 : message;
+                   ? (Message<T>) toPost40FailureResponse(message)
+                   : message;
         }
 
         private <T> T deserializePayloadPre40(DataInputPlus in, int version, IVersionedAsymmetricSerializer<?, T> serializer, int payloadSize) throws IOException
@@ -1050,8 +1073,8 @@ public class Message<T>
          * created at + cross-node
          */
 
-        private static final long TIMESTAMP_WRAPAROUND_GRACE_PERIOD_START  = 0xFFFFFFFFL - MINUTES.toMillis(15L);
-        private static final long TIMESTAMP_WRAPAROUND_GRACE_PERIOD_END    =               MINUTES.toMillis(15L);
+        private static final long TIMESTAMP_WRAPAROUND_GRACE_PERIOD_START = 0xFFFFFFFFL - MINUTES.toMillis(15L);
+        private static final long TIMESTAMP_WRAPAROUND_GRACE_PERIOD_END = MINUTES.toMillis(15L);
 
         @VisibleForTesting
         static long calculateCreationTimeNanos(int messageTimestampMillis, MonotonicClockTranslation timeSnapshot, long currentTimeNanos)
@@ -1062,13 +1085,13 @@ public class Message<T>
             long highBits = currentTimeMillis & 0xFFFFFFFF00000000L;
 
             long sentLowBits = messageTimestampMillis & 0x00000000FFFFFFFFL;
-            long currentLowBits =   currentTimeMillis & 0x00000000FFFFFFFFL;
+            long currentLowBits = currentTimeMillis & 0x00000000FFFFFFFFL;
 
             // if our sent bits occur within a grace period of a wrap around event,
             // and our current bits are no more than the same grace period after a wrap around event,
             // assume a wrap around has occurred, and deduct one highBit
-            if (      sentLowBits > TIMESTAMP_WRAPAROUND_GRACE_PERIOD_START
-                      && currentLowBits < TIMESTAMP_WRAPAROUND_GRACE_PERIOD_END)
+            if (sentLowBits > TIMESTAMP_WRAPAROUND_GRACE_PERIOD_START
+                && currentLowBits < TIMESTAMP_WRAPAROUND_GRACE_PERIOD_END)
             {
                 highBits -= 0x0000000100000000L;
             }
@@ -1164,12 +1187,12 @@ public class Message<T>
             for (int i = 0; i < count; i++)
             {
                 ParamType type = version >= VERSION_40
-                    ? ParamType.lookUpById(Ints.checkedCast(in.readUnsignedVInt()))
-                    : ParamType.lookUpByAlias(in.readUTF());
+                                 ? ParamType.lookUpById(Ints.checkedCast(in.readUnsignedVInt()))
+                                 : ParamType.lookUpByAlias(in.readUTF());
 
                 int length = version >= VERSION_40
-                    ? Ints.checkedCast(in.readUnsignedVInt())
-                    : in.readInt();
+                             ? Ints.checkedCast(in.readUnsignedVInt())
+                             : in.readInt();
 
                 if (null != type)
                 {
@@ -1240,8 +1263,8 @@ public class Message<T>
         private long serializedParamsSize(Map<ParamType, Object> params, int version)
         {
             long size = version >= VERSION_40
-                      ? computeUnsignedVIntSize(params.size())
-                      : sizeof(params.size());
+                        ? computeUnsignedVIntSize(params.size())
+                        : sizeof(params.size());
 
             for (Map.Entry<ParamType, Object> kv : params.entrySet())
             {
@@ -1316,8 +1339,8 @@ public class Message<T>
         private <T> int payloadSize(Message<T> message, int version)
         {
             long payloadSize = message.payload != null && message.payload != NoPayload.noPayload
-                             ? message.getPayloadSerializer().serializedSize(message.payload, version)
-                             : 0;
+                               ? message.getPayloadSerializer().serializedSize(message.payload, version)
+                               : 0;
             return Ints.checkedCast(payloadSize);
         }
     }
@@ -1329,11 +1352,11 @@ public class Message<T>
 
     // Verb#serializer() is null for legacy response messages. Once all Verbs with null handlers
     // are removed in a future major, this method can be replaced with a call to verb.serializer.
-    private static <In,Out> IVersionedAsymmetricSerializer<In, Out> getPayloadSerializer(Verb verb, long id, InetAddressAndPort from)
+    private static <In, Out> IVersionedAsymmetricSerializer<In, Out> getPayloadSerializer(Verb verb, long id, InetAddressAndPort from)
     {
         return null != verb.serializer()
-             ? verb.serializer()
-             : instance().callbacks.responseSerializer(id, from);
+               ? verb.serializer()
+               : instance().callbacks.responseSerializer(id, from);
     }
 
     private int serializedSize30;
@@ -1364,9 +1387,9 @@ public class Message<T>
         }
     }
 
-    private int payloadSize30   = -1;
+    private int payloadSize30 = -1;
     private int payloadSize3014 = -1;
-    private int payloadSize40   = -1;
+    private int payloadSize40 = -1;
 
     private int payloadSize(int version)
     {

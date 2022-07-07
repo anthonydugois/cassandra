@@ -32,8 +32,6 @@ import org.apache.cassandra.batchlog.BatchRemoveVerbHandler;
 import org.apache.cassandra.batchlog.BatchStoreVerbHandler;
 import org.apache.cassandra.concurrent.Stage;
 import org.apache.cassandra.config.DatabaseDescriptor;
-import org.apache.cassandra.custom.state.StatePayload;
-import org.apache.cassandra.custom.broadcast.StatePayloadVerbHandler;
 import org.apache.cassandra.db.CounterMutation;
 import org.apache.cassandra.db.CounterMutationVerbHandler;
 import org.apache.cassandra.db.Mutation;
@@ -43,9 +41,9 @@ import org.apache.cassandra.db.ReadCommandVerbHandler;
 import org.apache.cassandra.db.ReadRepairVerbHandler;
 import org.apache.cassandra.db.ReadResponse;
 import org.apache.cassandra.db.SnapshotCommand;
+import org.apache.cassandra.db.TruncateRequest;
 import org.apache.cassandra.db.TruncateResponse;
 import org.apache.cassandra.db.TruncateVerbHandler;
-import org.apache.cassandra.db.TruncateRequest;
 import org.apache.cassandra.exceptions.RequestFailureReason;
 import org.apache.cassandra.gms.GossipDigestAck;
 import org.apache.cassandra.gms.GossipDigestAck2;
@@ -69,14 +67,15 @@ import org.apache.cassandra.repair.messages.PrepareMessage;
 import org.apache.cassandra.repair.messages.SnapshotMessage;
 import org.apache.cassandra.repair.messages.StatusRequest;
 import org.apache.cassandra.repair.messages.StatusResponse;
-import org.apache.cassandra.repair.messages.SyncResponse;
 import org.apache.cassandra.repair.messages.SyncRequest;
-import org.apache.cassandra.repair.messages.ValidationResponse;
+import org.apache.cassandra.repair.messages.SyncResponse;
 import org.apache.cassandra.repair.messages.ValidationRequest;
+import org.apache.cassandra.repair.messages.ValidationResponse;
+import org.apache.cassandra.replica.broadcast.BroadcastPayload;
+import org.apache.cassandra.replica.broadcast.BroadcastPayloadVerbHandler;
 import org.apache.cassandra.schema.SchemaPullVerbHandler;
 import org.apache.cassandra.schema.SchemaPushVerbHandler;
 import org.apache.cassandra.schema.SchemaVersionVerbHandler;
-import org.apache.cassandra.utils.BooleanSerializer;
 import org.apache.cassandra.service.EchoVerbHandler;
 import org.apache.cassandra.service.SnapshotVerbHandler;
 import org.apache.cassandra.service.paxos.Commit;
@@ -85,15 +84,38 @@ import org.apache.cassandra.service.paxos.PrepareResponse;
 import org.apache.cassandra.service.paxos.PrepareVerbHandler;
 import org.apache.cassandra.service.paxos.ProposeVerbHandler;
 import org.apache.cassandra.streaming.ReplicationDoneVerbHandler;
+import org.apache.cassandra.utils.BooleanSerializer;
 import org.apache.cassandra.utils.UUIDSerializer;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static org.apache.cassandra.concurrent.Stage.*;
+import static org.apache.cassandra.concurrent.Stage.ANTI_ENTROPY;
+import static org.apache.cassandra.concurrent.Stage.BROADCAST;
+import static org.apache.cassandra.concurrent.Stage.COUNTER_MUTATION;
+import static org.apache.cassandra.concurrent.Stage.GOSSIP;
+import static org.apache.cassandra.concurrent.Stage.IMMEDIATE;
 import static org.apache.cassandra.concurrent.Stage.INTERNAL_RESPONSE;
+import static org.apache.cassandra.concurrent.Stage.MIGRATION;
 import static org.apache.cassandra.concurrent.Stage.MISC;
-import static org.apache.cassandra.net.VerbTimeouts.*;
-import static org.apache.cassandra.net.Verb.Kind.*;
-import static org.apache.cassandra.net.Verb.Priority.*;
+import static org.apache.cassandra.concurrent.Stage.MUTATION;
+import static org.apache.cassandra.concurrent.Stage.READ;
+import static org.apache.cassandra.concurrent.Stage.REQUEST_RESPONSE;
+import static org.apache.cassandra.concurrent.Stage.TRACING;
+import static org.apache.cassandra.net.Verb.Kind.CUSTOM;
+import static org.apache.cassandra.net.Verb.Kind.NORMAL;
+import static org.apache.cassandra.net.Verb.Priority.P0;
+import static org.apache.cassandra.net.Verb.Priority.P1;
+import static org.apache.cassandra.net.Verb.Priority.P2;
+import static org.apache.cassandra.net.Verb.Priority.P3;
+import static org.apache.cassandra.net.Verb.Priority.P4;
+import static org.apache.cassandra.net.VerbTimeouts.counterTimeout;
+import static org.apache.cassandra.net.VerbTimeouts.longTimeout;
+import static org.apache.cassandra.net.VerbTimeouts.noTimeout;
+import static org.apache.cassandra.net.VerbTimeouts.pingTimeout;
+import static org.apache.cassandra.net.VerbTimeouts.rangeTimeout;
+import static org.apache.cassandra.net.VerbTimeouts.readTimeout;
+import static org.apache.cassandra.net.VerbTimeouts.rpcTimeout;
+import static org.apache.cassandra.net.VerbTimeouts.truncateTimeout;
+import static org.apache.cassandra.net.VerbTimeouts.writeTimeout;
 import static org.apache.cassandra.schema.MigrationManager.MigrationsSerializer;
 
 /**
@@ -172,7 +194,7 @@ public enum Verb
     SNAPSHOT_REQ(27, P0, rpcTimeout, MISC, () -> SnapshotCommand.serializer, () -> SnapshotVerbHandler.instance, SNAPSHOT_RSP),
 
     // broadcast payload
-    STATE_PAYLOAD_MSG(300, P2, longTimeout, MISC, () -> StatePayload.serializer, () -> StatePayloadVerbHandler.instance),
+    BROADCAST_PAYLOAD_MSG(300, P2, longTimeout, BROADCAST, () -> BroadcastPayload.serializer, () -> BroadcastPayloadVerbHandler.instance),
 
     // generic failure response
     FAILURE_RSP(99, P0, noTimeout, REQUEST_RESPONSE, () -> RequestFailureReason.serializer, () -> ResponseVerbHandler.instance),

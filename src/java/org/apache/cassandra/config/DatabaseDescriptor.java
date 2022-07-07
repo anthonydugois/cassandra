@@ -1126,9 +1126,9 @@ public class DatabaseDescriptor
             throw new ConfigurationException("Missing endpoint_snitch directive", false);
         }
 
-        if (conf.selection_snitch == null)
+        if (conf.selection_strategy == null)
         {
-            throw new ConfigurationException("Missing selection_snitch directive", false);
+            throw new ConfigurationException("Missing selection_strategy directive", false);
         }
 
         IEndpointSnitch endpointSnitch;
@@ -1146,10 +1146,10 @@ public class DatabaseDescriptor
 
         try
         {
-            Class<?> selectionClass = Class.forName(conf.selection_snitch.class_name);
+            Class<?> selectionClass = Class.forName(conf.selection_strategy.class_name);
 
             snitch = (IEndpointSnitch) selectionClass.getConstructor(IEndpointSnitch.class, Map.class)
-                                                     .newInstance(endpointSnitch, conf.selection_snitch.parameters);
+                                                     .newInstance(endpointSnitch, conf.selection_strategy.parameters);
         }
         catch (Exception exception)
         {
@@ -1159,13 +1159,21 @@ public class DatabaseDescriptor
         EndpointSnitchInfo.create();
 
         localDC = snitch.getLocalDatacenter();
+
         localComparator = (replica1, replica2) -> {
             boolean local1 = localDC.equals(snitch.getDatacenter(replica1));
             boolean local2 = localDC.equals(snitch.getDatacenter(replica2));
+
             if (local1 && !local2)
+            {
                 return -1;
+            }
+
             if (local2 && !local1)
+            {
                 return 1;
+            }
+
             return 0;
         };
     }

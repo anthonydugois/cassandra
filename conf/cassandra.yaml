@@ -1072,8 +1072,8 @@ slow_query_log_timeout_in_ms: 500
 # of the snitch, which will be assumed to be on your classpath.
 endpoint_snitch: org.apache.cassandra.locator.SimpleSnitch
 
-selection_snitch:
-  - class_name: org.apache.cassandra.custom.snitch.NoopSnitch
+selection_strategy:
+  - class_name: org.apache.cassandra.replica.selection.SimpleStrategy
     parameters:
       - trace: false
 

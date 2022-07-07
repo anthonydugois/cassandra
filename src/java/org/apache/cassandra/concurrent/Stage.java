@@ -42,7 +42,6 @@ import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.net.MessagingService;
 import org.apache.cassandra.net.Verb;
 import org.apache.cassandra.utils.ExecutorUtils;
-
 import org.apache.cassandra.utils.FBUtilities;
 
 import static java.util.stream.Collectors.toMap;
@@ -60,7 +59,8 @@ public enum Stage
     MISC("MiscStage", "internal", () -> 1, null, Stage::singleThreadedStage),
     TRACING("TracingStage", "internal", () -> 1, null, Stage::tracingExecutor),
     INTERNAL_RESPONSE("InternalResponseStage", "internal", FBUtilities::getAvailableProcessors, null, Stage::multiThreadedStage),
-    IMMEDIATE("ImmediateStage", "internal", () -> 0, null, Stage::immediateExecutor);
+    IMMEDIATE("ImmediateStage", "internal", () -> 0, null, Stage::immediateExecutor),
+    BROADCAST("BroadcastStage", "internal", () -> 1, null, Stage::singleThreadedStage);
 
     public static final long KEEP_ALIVE_SECONDS = 60; // seconds to keep "extra" threads alive for when idle
     public final String jmxName;
