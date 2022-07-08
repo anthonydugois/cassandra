@@ -1074,8 +1074,6 @@ endpoint_snitch: org.apache.cassandra.locator.SimpleSnitch
 
 selection_strategy:
   - class_name: org.apache.cassandra.replica.selection.SimpleStrategy
-    parameters:
-      - trace: false
 
 #read_queue:
 #  - class_name:

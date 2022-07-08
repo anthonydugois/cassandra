@@ -31,11 +31,11 @@ public class SimpleStrategy extends SelectionStrategy
 {
     private static final Logger logger = LoggerFactory.getLogger(SimpleStrategy.class);
 
-    public SimpleStrategy(IEndpointSnitch subsnitch, Map<String, String> parameters)
+    public SimpleStrategy(IEndpointSnitch snitch, Map<String, String> parameters)
     {
-        super(subsnitch, parameters);
+        super(snitch, parameters);
 
-        logger.info("Using " + this.getClass().getName() + " on top of " + subsnitch.getClass().getName());
+        logger.info("Using " + this.getClass().getName() + " on top of " + snitch.getClass().getName());
     }
 
     @Override

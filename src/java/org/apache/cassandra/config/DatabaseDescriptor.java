@@ -19,6 +19,7 @@ package org.apache.cassandra.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.net.*;
 import java.nio.file.FileStore;
 import java.nio.file.NoSuchFileException;
@@ -1147,9 +1148,16 @@ public class DatabaseDescriptor
         try
         {
             Class<?> selectionClass = Class.forName(conf.selection_strategy.class_name);
+            Constructor<?> constructor = selectionClass.getConstructor(IEndpointSnitch.class, Map.class);
 
-            snitch = (IEndpointSnitch) selectionClass.getConstructor(IEndpointSnitch.class, Map.class)
-                                                     .newInstance(endpointSnitch, conf.selection_strategy.parameters);
+            Map<String, String> parameters = conf.selection_strategy.parameters;
+
+            if (parameters == null)
+            {
+                parameters = new HashMap<>(); // ensure we are not passing a null pointer
+            }
+
+            snitch = (IEndpointSnitch) constructor.newInstance(endpointSnitch, parameters);
         }
         catch (Exception exception)
         {

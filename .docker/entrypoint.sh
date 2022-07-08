@@ -82,7 +82,7 @@ if [ "$1" = 'cassandra' ]; then
 		-r 's/(- seeds:).*/\1 "'"$CASSANDRA_SEEDS"'"/'
 
 	_sed-in-place "$CASSANDRA_CONF/cassandra.yaml" \
-		-r 's/(selection_snitch:\n  - class_name:).*/\1 '"$CASSANDRA_SELECTION_SNITCH"'/'
+		-r 'N;s/(selection_strategy:\n  - class_name:).*/\1 '"$CASSANDRA_SELECTION_STRATEGY"'/'
 
 	for yaml in \
 		broadcast_address \
@@ -94,7 +94,7 @@ if [ "$1" = 'cassandra' ]; then
 		rpc_address \
 		start_rpc \
 		concurrent_reads \
-		concurrent_writes
+		concurrent_writes \
 	; do
 		var="CASSANDRA_${yaml^^}"
 		val="${!var}"

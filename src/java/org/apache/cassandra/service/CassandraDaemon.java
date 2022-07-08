@@ -28,6 +28,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -784,14 +785,21 @@ public class CassandraDaemon
             Keymap.Loader loader = new Keymap.Loader(0, 60, TimeUnit.SECONDS);
 
             loader.setPathSupplier(() -> {
+                List<Path> paths = new ArrayList<>();
+
                 try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get("/csv"), "keymap*.csv"))
                 {
-                    return stream;
+                    for (Path path : stream)
+                    {
+                        paths.add(path);
+                    }
                 }
                 catch (IOException exception)
                 {
-                    return null;
+                    // ignored
                 }
+
+                return paths;
             });
 
             loader.start();

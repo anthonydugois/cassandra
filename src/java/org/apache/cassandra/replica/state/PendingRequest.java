@@ -18,12 +18,13 @@
 
 package org.apache.cassandra.replica.state;
 
+import java.nio.charset.StandardCharsets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.db.SinglePartitionReadCommand;
 import org.apache.cassandra.locator.Replica;
-import org.apache.cassandra.utils.ByteBufferUtil;
 
 public class PendingRequest
 {
@@ -40,9 +41,9 @@ public class PendingRequest
     public PendingRequest(SinglePartitionReadCommand command)
     {
         this.command = command;
-        this.key = ByteBufferUtil.bytesToHex(command.partitionKey().getKey());
+        this.key = new String(command.partitionKey().getKey().array(), StandardCharsets.UTF_8);
 
-        logger.info("New pending request: " + key);
+        // logger.info("New pending request: " + key);
     }
 
     public void send(Iterable<Replica> endpoints)
